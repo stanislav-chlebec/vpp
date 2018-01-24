@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate protoc --proto_path=model/stn --gogo_out=model/stn model/stn/stn.proto
+// go:generate protoc --proto_path=../common/model/stn --gogo_out=../common/model/stn ../common/model/stn/stn.proto
 
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/stn.api.json --output-dir=bin_api
+// go:generate binapi-generator --input-file=/usr/share/vpp/api/stn.api.json --output-dir=../common/bin_api
 
 package ifplugin
 
@@ -29,9 +29,9 @@ import (
 	"github.com/ligato/cn-infra/utils/addrs"
 	"github.com/ligato/cn-infra/utils/safeclose"
 	"github.com/ligato/vpp-agent/idxvpp"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/stn"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/stn"
+	modelStn "github.com/ligato/vpp-agent/plugins/defaultplugins/common/model/stn"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/ifaceidx"
-	modelStn "github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/model/stn"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/vppcalls"
 	"github.com/ligato/vpp-agent/plugins/govppmux"
 )
@@ -289,8 +289,8 @@ func stnIdentifier(iface string) string {
 
 func (plugin *StnConfigurator) checkMsgCompatibility() error {
 	msgs := []govppapi.Message{
-		&stn.StnAddDelRule{},
-		&stn.StnAddDelRuleReply{},
+		/*&stn.StnAddDelRule{},
+		&stn.StnAddDelRuleReply{},*/
 	}
 	err := plugin.vppChan.CheckMessageCompatibility(msgs...)
 	if err != nil {

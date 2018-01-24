@@ -17,7 +17,6 @@ package l2plugin
 import (
 	"fmt"
 
-	"net"
 	"time"
 
 	govppapi "git.fd.io/govpp.git/api"
@@ -27,12 +26,13 @@ import (
 	"github.com/ligato/cn-infra/utils/safeclose"
 	"github.com/ligato/vpp-agent/idxvpp"
 	"github.com/ligato/vpp-agent/idxvpp/nametoidx"
+	l2ba "github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/l2"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/model/l2"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/ifaceidx"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/bdidx"
-	l2ba "github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/bin_api/l2"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/model/l2"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/vppcalls"
 	"github.com/ligato/vpp-agent/plugins/govppmux"
+	"github.com/ligato/cn-infra/utils/addrs"
 )
 
 // FIBConfigurator runs in the background in its own goroutine where it watches for any changes
@@ -251,7 +251,7 @@ func (plugin *FIBConfigurator) LookupFIBEntries(bridgeDomain uint32) error {
 			break
 		}
 		// Store name if missing.
-		macStr := net.HardwareAddr(msg.Mac).String()
+		macStr := addrs.MacIntToString(msg.Mac)
 		_, _, found := plugin.FibIndexes.LookupIdx(macStr)
 		if !found {
 			// Metadata resolution
@@ -410,17 +410,17 @@ func (plugin *FIBConfigurator) ResolveCreatedBridgeDomain(domainName string, dom
 			}
 			if !validated {
 				plugin.Log.Infof("FIB entry %v - required interface %v is not a part of bridge domain %v",
-					mac, domainID)
+					mac, fibInterface, domainID)
 				continue
 			} else {
 				fibBvi := meta.(*FIBMeta).BVI
 				fibStatic := meta.(*FIBMeta).StaticConfig
 				err := plugin.vppcalls.Add(mac, domainID, ifIndex, fibBvi, fibStatic, func(err error) {
-					plugin.Log.Infof("Previously not configurable FIB entry with MAC %v is now configured", mac)
+					plugin.Log.Debugf("Previously not configurable FIB entry with MAC %v is now configured", mac)
 					// Resolve registration.
 					plugin.FibIndexes.RegisterName(mac, plugin.FibIndexSeq, meta)
 					plugin.FibIndexSeq++
-					plugin.Log.Debug("Registering FIB table entry with MAC ", mac)
+					plugin.Log.Debugf("Registering FIB table entry with MAC %v", mac)
 					plugin.FibDesIndexes.UnregisterName(mac)
 					plugin.Log.Debugf("Unconfigured FIB entry with MAC %v removed from cache", mac)
 					callback(err)
@@ -431,7 +431,7 @@ func (plugin *FIBConfigurator) ResolveCreatedBridgeDomain(domainName string, dom
 			}
 		}
 	}
-	plugin.Log.Infof("FIB: resolution of created bridge domain %v is done", domainName)
+	plugin.Log.Debugf("FIB: resolution of created bridge domain %v is done", domainName)
 	return wasError
 }
 

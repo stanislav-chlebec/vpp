@@ -15,13 +15,14 @@
 package vppcalls
 
 import (
-	"fmt"
+	//"fmt"
+	"time"
+
 	govppapi "git.fd.io/govpp.git/api"
 	"github.com/ligato/cn-infra/logging"
 	"github.com/ligato/cn-infra/logging/measure"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/interfaces"
-	intf "github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/model/interfaces"
-	"time"
+	//"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/interfaces"
+	intf "github.com/ligato/vpp-agent/plugins/defaultplugins/common/model/interfaces"
 )
 
 // SetRxMode calls SwInterfaceSetRxMode bin
@@ -36,7 +37,7 @@ func SetRxMode(ifIdx uint32, rxModeSettings intf.Interfaces_Interface_RxModeSett
 	}()
 
 	//prepare the message
-	req := &interfaces.SwInterfaceSetRxMode{}
+/*	req := &interfaces.SwInterfaceSetRxMode{}
 	req.SwIfIndex = ifIdx
 	req.Mode = uint8(rxModeSettings.RxMode)
 	req.QueueID = rxModeSettings.QueueID
@@ -54,7 +55,7 @@ func SetRxMode(ifIdx uint32, rxModeSettings intf.Interfaces_Interface_RxModeSett
 		return fmt.Errorf("setting rxModeSettings returned %d", reply.Retval)
 	}
 	log.WithFields(logging.Fields{"RxModeType": rxModeSettings}).Debug("RxModeType ", rxModeSettings, "for interface ", ifIdx, " was set.")
-
+*/
 	return nil
 
 }

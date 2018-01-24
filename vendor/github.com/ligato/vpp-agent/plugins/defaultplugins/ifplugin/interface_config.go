@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate protoc --proto_path=model/interfaces --gogo_out=model/interfaces model/interfaces/interfaces.proto
-//go:generate protoc --proto_path=model/bfd --gogo_out=model/bfd model/bfd/bfd.proto
+//go:generate protoc --proto_path=../common/model/interfaces --gogo_out=../common/model/interfaces ../common/model/interfaces/interfaces.proto
+//go:generate protoc --proto_path=../common/model/bfd --gogo_out=../common/model/bfd ../common/model/bfd/bfd.proto
 
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/af_packet.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/interface.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/ip.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/memif.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/tap.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/tapv2.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/vpe.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/vxlan.api.json --output-dir=bin_api
-//go:generate binapi-generator --input-file=/usr/share/vpp/api/stats.api.json --output-dir=bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/af_packet.api.json --output-dir=../common/bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/interface.api.json --output-dir=../common/bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/ip.api.json --output-dir=../common/bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/memif.api.json --output-dir=../common/bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/tap.api.json --output-dir=../common/bin_api
+// go:generate binapi-generator --input-file=/usr/share/vpp/api/tapv2.api.json --output-dir=../common/bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/vpe.api.json --output-dir=../common/bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/vxlan.api.json --output-dir=../common/bin_api
+//go:generate binapi-generator --input-file=/usr/share/vpp/api/stats.api.json --output-dir=../common/bin_api
 
 // Package ifplugin implements the Interface plugin that handles management
 // of VPP interfaces.
@@ -45,13 +45,13 @@ import (
 	"github.com/ligato/cn-infra/servicelabel"
 	"github.com/ligato/cn-infra/utils/addrs"
 	"github.com/ligato/cn-infra/utils/safeclose"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/interfaces"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/ip"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/memif"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/tap"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/vxlan"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/interfaces"
+	//"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/ip"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/memif"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/tap"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/vxlan"
+	intf "github.com/ligato/vpp-agent/plugins/defaultplugins/common/model/interfaces"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/ifaceidx"
-	intf "github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/model/interfaces"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/vppcalls"
 	"github.com/ligato/vpp-agent/plugins/govppmux"
 )
@@ -313,7 +313,7 @@ Call concrete vpp API method for setting rx-mode
 */
 func (plugin *InterfaceConfigurator) configRxMode(iface *intf.Interfaces_Interface, ifIdx uint32, rxModeSettings intf.Interfaces_Interface_RxModeSettings) error {
 	err := vppcalls.SetRxMode(ifIdx, rxModeSettings, plugin.Log, plugin.vppCh,
-		measure.GetTimeLog(interfaces.SwInterfaceSetRxMode{}, plugin.Stopwatch))
+		measure.GetTimeLog(nil, plugin.Stopwatch))
 	plugin.Log.WithFields(logging.Fields{"ifName": iface.Name, "rxMode": rxModeSettings.RxMode}).
 		Debug("RX-mode configuration for ", iface.Type, ".")
 	return err
@@ -636,7 +636,7 @@ Direct call of vpp api to change rx-mode of specified interface
 func (plugin *InterfaceConfigurator) modifyRxMode(ifIdx uint32, newIntf *intf.Interfaces_Interface,
 	oldRxMode intf.RxModeType, newRxMode intf.Interfaces_Interface_RxModeSettings) error {
 	err := vppcalls.SetRxMode(ifIdx, *newIntf.RxModeSettings, plugin.Log, plugin.vppCh,
-		measure.GetTimeLog(interfaces.SwInterfaceSetRxMode{}, plugin.Stopwatch))
+		measure.GetTimeLog(nil, plugin.Stopwatch))
 	plugin.Log.WithFields(
 		logging.Fields{"ifName": newIntf.Name, "rxMode old": oldRxMode, "rxMode new": newRxMode.RxMode}).
 		Debug("RX-mode modification for ", newIntf.Type, ".")
@@ -815,7 +815,7 @@ func (plugin *InterfaceConfigurator) addContainerIPAddress(iface *intf.Interface
 		return err
 	}
 	return vppcalls.AddContainerIP(ifIdx, addr, isIpv6, plugin.Log, plugin.vppCh,
-		measure.GetTimeLog(ip.IPContainerProxyAddDel{}, plugin.Stopwatch))
+		measure.GetTimeLog(nil, plugin.Stopwatch))
 }
 
 func (plugin *InterfaceConfigurator) deleteContainerIPAddress(oldConfig *intf.Interfaces_Interface, ifIdx uint32) error {
@@ -824,5 +824,5 @@ func (plugin *InterfaceConfigurator) deleteContainerIPAddress(oldConfig *intf.In
 		return nil
 	}
 	return vppcalls.DelContainerIP(ifIdx, addr, isIpv6, plugin.Log, plugin.vppCh,
-		measure.GetTimeLog(ip.IPContainerProxyAddDel{}, plugin.Stopwatch))
+		measure.GetTimeLog(nil, plugin.Stopwatch))
 }

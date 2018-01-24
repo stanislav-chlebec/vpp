@@ -15,7 +15,6 @@
 package vppcalls
 
 import (
-	"fmt"
 	"net"
 
 	"time"
@@ -23,7 +22,7 @@ import (
 	govppapi "git.fd.io/govpp.git/api"
 	"github.com/ligato/cn-infra/logging"
 	"github.com/ligato/cn-infra/logging/measure"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/ip"
+//	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/ip"
 )
 
 const (
@@ -41,8 +40,10 @@ func AddContainerIP(ifIdx uint32, addr *net.IPNet, isIpv6 bool, log logging.Logg
 		}
 	}()
 
-	req := prepareMessageForVpp(ifIdx, addr, isIpv6, addContainerIP)
-	return sendAndLogMessageForVpp(ifIdx, req, "creat", log, vppChan)
+	return nil
+	/*req := prepareMessageForVpp(ifIdx, addr, isIpv6, addContainerIP)
+	return sendAndLogMessageForVpp(ifIdx, req, "creat", log, vppChan)*/
+
 }
 
 // DelContainerIP calls IPContainerProxyAddDel VPP API with IsAdd=0
@@ -55,10 +56,12 @@ func DelContainerIP(ifIdx uint32, addr *net.IPNet, isIpv6 bool, log logging.Logg
 		}
 	}()
 
-	req := prepareMessageForVpp(ifIdx, addr, isIpv6, removeContainerIP)
-	return sendAndLogMessageForVpp(ifIdx, req, "delet", log, vppChan)
+	return nil
+	/*req := prepareMessageForVpp(ifIdx, addr, isIpv6, removeContainerIP)
+	return sendAndLogMessageForVpp(ifIdx, req, "delet", log, vppChan)*/
 }
 
+/*
 func prepareMessageForVpp(ifIdx uint32, addr *net.IPNet, isIpv6 bool, isAdd uint8) *ip.IPContainerProxyAddDel {
 	req := &ip.IPContainerProxyAddDel{}
 	req.SwIfIndex = ifIdx
@@ -74,6 +77,7 @@ func prepareMessageForVpp(ifIdx uint32, addr *net.IPNet, isIpv6 bool, isAdd uint
 		req.IsIP4 = 0
 	}
 	return req
+
 }
 
 func sendAndLogMessageForVpp(ifIdx uint32, req *ip.IPContainerProxyAddDel, logActionType string, log logging.Logger, vppChan *govppapi.Channel) error {
@@ -95,3 +99,4 @@ func sendAndLogMessageForVpp(ifIdx uint32, req *ip.IPContainerProxyAddDel, logAc
 
 	return nil
 }
+*/

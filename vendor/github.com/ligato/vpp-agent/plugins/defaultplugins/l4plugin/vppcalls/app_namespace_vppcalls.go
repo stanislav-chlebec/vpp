@@ -17,14 +17,13 @@ package vppcalls
 import (
 	govppapi "git.fd.io/govpp.git/api"
 	"github.com/ligato/cn-infra/logging"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/l4plugin/bin_api/session"
 )
 
 // AddAppNamespace calls respective VPP binary api to configure AppNamespace
 func AddAppNamespace(secret uint64, swIfIdx, ip4FibID, ip6FibID uint32, id []byte, log logging.Logger, vppChan *govppapi.Channel) (appnsIndex uint32, err error) {
 	log.Debugf("Adding App Namespace %v to interface %v", string(id), swIfIdx)
 
-	req := &session.AppNamespaceAddDel{
+	/*req := &session.AppNamespaceAddDel{
 		SwIfIndex:      swIfIdx,
 		Secret:         secret,
 		IP4FibID:       ip4FibID,
@@ -51,5 +50,6 @@ func AddAppNamespace(secret uint64, swIfIdx, ip4FibID, ip6FibID uint32, id []byt
 		"AppNamespaceIndex": appnsIndex,
 	}).Debug("AppNamespace added.")
 
-	return appnsIndex, nil
+	return appnsIndex, nil*/
+	return 0, nil
 }

@@ -17,13 +17,15 @@ package vppcalls
 import (
 	"container/list"
 	"fmt"
+
 	govppapi "git.fd.io/govpp.git/api"
 	"github.com/ligato/cn-infra/logging"
 	"github.com/ligato/cn-infra/logging/measure"
-	l2ba "github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/bin_api/l2"
-	"net"
+	l2ba "github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/l2"
 
 	"time"
+	"strings"
+	"strconv"
 )
 
 // FibLogicalReq groups multiple fields so that all of them do not enumerate in one function call (request, reply/callback).
@@ -92,18 +94,18 @@ func (fib *L2FibVppCalls) Delete(mac string, bdID uint32, ifIdx uint32, callback
 }
 
 func (fib *L2FibVppCalls) request(logicalReq *FibLogicalReq, log logging.Logger) error {
-	// Convert MAC address.
-	var mac []byte
+
 	var err error
-	if logicalReq.MAC != "" {
-		mac, err = net.ParseMAC(logicalReq.MAC)
-	}
+	// Convert MAC address
+	macHex := strings.Replace(logicalReq.MAC, ":", "", -1)
+	macHex = (macHex + "0000") // EUI-48 correction
+	macInt, err := strconv.ParseUint(macHex, 16, 64)
 	if err != nil {
 		return err
 	}
 
 	req := &l2ba.L2fibAddDel{}
-	req.Mac = mac
+	req.Mac = macInt
 	req.BdID = logicalReq.BDIdx
 	req.SwIfIndex = logicalReq.SwIfIdx
 	req.BviMac = parseBoolToUint8(logicalReq.BVI)

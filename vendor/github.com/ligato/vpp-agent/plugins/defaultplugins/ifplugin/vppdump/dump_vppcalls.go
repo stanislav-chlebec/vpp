@@ -24,13 +24,13 @@ import (
 	govppapi "git.fd.io/govpp.git/api"
 	"github.com/ligato/cn-infra/logging"
 	"github.com/ligato/cn-infra/logging/measure"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/interfaces"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/ip"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/memif"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/tap"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/tapv2"
-	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/bin_api/vxlan"
-	ifnb "github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/model/interfaces"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/interfaces"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/ip"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/memif"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/tap"
+	//"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/tapv2"
+	"github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/vxlan"
+	ifnb "github.com/ligato/vpp-agent/plugins/defaultplugins/common/model/interfaces"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/ifplugin/vppcalls"
 )
 
@@ -271,7 +271,7 @@ func dumpTapDetails(log logging.Logger, vppChan *govppapi.Channel, ifs map[uint3
 	}
 
 	// TAP v.2
-	reqCtx = vppChan.SendMultiRequest(&tapv2.SwInterfaceTapV2Dump{})
+	/*reqCtx = vppChan.SendMultiRequest(&tapv2.SwInterfaceTapV2Dump{})
 	for {
 		tapDetails := &tapv2.SwInterfaceTapV2Details{}
 		stop, err := reqCtx.ReceiveReply(tapDetails)
@@ -294,7 +294,7 @@ func dumpTapDetails(log logging.Logger, vppChan *govppapi.Channel, ifs map[uint3
 		}
 		ifs[tapDetails.SwIfIndex].Type = ifnb.InterfaceType_TAP_INTERFACE
 	}
-
+*/
 	return nil
 }
 

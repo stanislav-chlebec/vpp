@@ -21,9 +21,10 @@ import (
 
 	"github.com/ligato/cn-infra/logging"
 	"github.com/ligato/cn-infra/logging/measure"
-	l2ba "github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/bin_api/l2"
-	l2nb "github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/model/l2"
+	l2ba "github.com/ligato/vpp-agent/plugins/defaultplugins/common/bin_api/l2"
+	l2nb "github.com/ligato/vpp-agent/plugins/defaultplugins/common/model/l2"
 	"github.com/ligato/vpp-agent/plugins/defaultplugins/l2plugin/vppcalls"
+	"encoding/binary"
 )
 
 // DumpBridgeDomainIDs lists all configured bridge domains. Auxiliary method for LookupFIBEntries.
@@ -160,7 +161,7 @@ func DumpFIBTableEntries(log logging.Logger, vppChan vppcalls.VPPChannel, timeLo
 			return nil, err
 		}
 
-		mac := net.HardwareAddr(fibDetails.Mac).String()
+		mac := uint64ToMACAddrString(fibDetails.Mac)
 		var action l2nb.FibTableEntries_FibTableEntry_Action
 		if fibDetails.FilterMac > 0 {
 			action = l2nb.FibTableEntries_FibTableEntry_DROP
@@ -222,4 +223,11 @@ func DumpXConnectPairs(log logging.Logger, vppChan vppcalls.VPPChannel, timeLog 
 	}
 
 	return xpairs, nil
+}
+
+// uint64ToMACAddrString converts MAC address in uint64 number as received from VPP to MAC address string.
+func uint64ToMACAddrString(macUint uint64) string {
+	mac := make([]byte, 8)
+	binary.BigEndian.PutUint64(mac, macUint)
+	return net.HardwareAddr(mac[2:]).String()
 }
