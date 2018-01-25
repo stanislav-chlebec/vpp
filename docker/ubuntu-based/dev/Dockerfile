@@ -35,7 +35,7 @@ ENV LD_PRELOAD_LIB_DIR $VPP_LIB_DIR
 #        make pkg-deb; \
 #    fi"
 
-RUN cd ${VPP_DIR} && git checkout ${VPP_COMMIT_ID} && \ #checkout commit in order to generate meaningful tag
+RUN cd ${VPP_DIR} && git checkout ${VPP_COMMIT_ID} &&\
     git clone https://github.com/Mellanox/vpp-binaries.git &&\
     rm -rf build-root/ && mkdir build-root &&\
     cp vpp-binaries/ubuntu1604/*.deb build-root/
