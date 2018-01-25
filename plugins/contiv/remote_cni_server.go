@@ -38,6 +38,7 @@ import (
 	linux_intf "github.com/ligato/vpp-agent/plugins/linuxplugin/ifplugin/model/interfaces"
 	linux_l3 "github.com/ligato/vpp-agent/plugins/linuxplugin/l3plugin/model/l3"
 	"golang.org/x/net/context"
+	"os/exec"
 )
 
 const (
@@ -479,6 +480,24 @@ func (s *remoteCNIserver) configureVswitchHostConnectivity(config *vswitchConfig
 	if err != nil {
 		s.Logger.Error(err)
 		return err
+	}
+
+	// if requested, disable TCP checksum offload on the vpp1 veth/TAP interface in the host.
+	if s.tcpChecksumOffloadDisabled {
+		// execute the ethtool
+		cmdStr := "ethtool --offload vpp1 rx off tx off"
+		s.Logger.Infof("Executing CMD: %s", cmdStr)
+
+		cmdArr := strings.Split(cmdStr, " ")
+		cmd := exec.Command("ethtool", cmdArr[1:]...)
+
+		// check the output of the exec
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			s.Logger.Errorf("CMD exec returned error: %v", err)
+			return err
+		}
+		s.Logger.Infof("CMD output: %s", output)
 	}
 
 	return nil

@@ -20,6 +20,7 @@ metadata:
   namespace: kube-system
 data:
   contiv.yaml: |
+    TCPChecksumOffloadDisabled: True
     TCPstackDisabled: True
     IPAMConfig:
       PodSubnetCIDR: "10.1.0.0/16"
@@ -200,8 +201,6 @@ spec:
         args:
         - -c
         - "rm -rf /dev/shm/db /dev/shm/global_vm /dev/shm/vpe-api || true && \
-           rm -rf /vpp-lib64/* || true && \
-           cp -r $LD_PRELOAD_LIB_DIR/* /vpp-lib64/ && \
            if [ ! -e /host/etc/vpp/contiv-vswitch.conf ]; then cp /etc/vpp/contiv-vswitch.conf /host/etc/vpp; fi && \
            ip link del vpp1 || true"
         imagePullPolicy: IfNotPresent

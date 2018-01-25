@@ -29,7 +29,9 @@ RUN /bin/bash -c "if [ '${VPP_COMMIT_ID}' != 'xxx' ]; then \
         rm -rf build-root/ && \
         git reset --hard HEAD && \
         yes | make install-dep && \
+        make dpdk-install-dev && \
         make bootstrap && \
+        make build && \
         make pkg-deb; \
     fi"
 

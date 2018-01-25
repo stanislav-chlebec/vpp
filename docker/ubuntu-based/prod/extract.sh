@@ -36,8 +36,8 @@ sudo docker exec ${CID} /bin/bash -c 'mkdir -p /root/vpp && cp /opt/vpp-agent/de
 sudo docker cp ${CID}:/root/vpp.tar.gz binaries/
 
 # extract ldpreload lib
-sudo docker exec ${CID} /bin/bash -c 'cd $VPP_DIR/build-root/install-vpp-native/vpp/lib64/; tar -zcvf /root/ldpreload.tar.gz libvcl_ldpreload.so.0.0.0'
-sudo docker cp ${CID}:/root/ldpreload.tar.gz binaries/
+#sudo docker exec ${CID} /bin/bash -c 'cd $VPP_DIR/build-root/install-vpp-native/vpp/lib64/; tar -zcvf /root/ldpreload.tar.gz libvcl_ldpreload.so.0.0.0'
+#sudo docker cp ${CID}:/root/ldpreload.tar.gz binaries/
 
 # delete the "extract" container
 sudo docker rm -f ${CID}

@@ -20,8 +20,8 @@ RUN dpkg -i vpp/vpp-lib_*.deb vpp/vpp_*.deb vpp/vpp-plugins_*.deb && \
     rm -rf vpp
 
 # add ldpreload lib
-ENV LD_PRELOAD_LIB_DIR /opt/ldpreload/
-ADD binaries/ldpreload.tar.gz $LD_PRELOAD_LIB_DIR
+#ENV LD_PRELOAD_LIB_DIR /opt/ldpreload/
+#ADD binaries/ldpreload.tar.gz $LD_PRELOAD_LIB_DIR
 
 # rename defualt VPP startup config to contiv-vswitch.conf
 RUN mv /etc/vpp/vpp.conf /etc/vpp/contiv-vswitch.conf
