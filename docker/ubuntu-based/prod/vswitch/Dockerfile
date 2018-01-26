@@ -2,7 +2,7 @@
 FROM ligato/vpp-agent:pantheon-dev
 
 # install ethtool - required for disabling TCP checksum offload in containers
-RUN apt-get update && apt-get install -y ethtool &&\
+RUN apt-get update && apt-get install -y ethtool git python-cffi &&\
     rm -rf /var/lib/apt/lists/*
 
 # set work directory
@@ -16,8 +16,12 @@ RUN /bin/bash -c "yes | apt remove vpp* || true"
 
 # add VPP binaries (add also extracts from .tar.gz)
 ADD binaries/vpp.tar.gz .
-RUN dpkg -i vpp/vpp-lib_*.deb vpp/vpp_*.deb vpp/vpp-plugins_*.deb vpp/vpp-dev_*.deb vpp/vpp-dpdk-dev_*.deb && \
+RUN rm vpp/vpp-api-python* && dpkg -i vpp/*.deb && \
     rm -rf vpp
+
+RUN git clone https://github.com/Mellanox/vpp-binaries.git &&\
+   cd vpp-binaries/ubuntu1604/ && dpkg -i *.deb  && cd .. && rm -rf ubuntu1604
+
 
 # add ldpreload lib
 #ENV LD_PRELOAD_LIB_DIR /opt/ldpreload/

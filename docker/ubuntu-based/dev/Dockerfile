@@ -21,24 +21,20 @@ ENV VPP_BIN $VPP_BIN_DIR/vpp
 ENV LD_PRELOAD_LIB_DIR $VPP_LIB_DIR
 
 # if VPP comit ID is specified, update to specific VPP commit ID & rebuild
-#RUN /bin/bash -c "if [ '${VPP_COMMIT_ID}' != 'xxx' ]; then \
-#        cd ${VPP_DIR} && \
-#        git checkout master && \
-#        git pull && \
-#        git checkout ${VPP_COMMIT_ID} && \
-#        rm -rf build-root/ && \
-#        git reset --hard HEAD && \
-#        yes | make install-dep && \
-#        make dpdk-install-dev && \
-#        make bootstrap && \
-#        make build && \
-#        make pkg-deb; \
-#    fi"
+RUN /bin/bash -c "if [ '${VPP_COMMIT_ID}' != 'xxx' ]; then \
+        cd ${VPP_DIR} && \
+        git checkout master && \
+        git pull && \
+        git checkout ${VPP_COMMIT_ID} && \
+        rm -rf build-root/ && \
+        git reset --hard HEAD && \
+        yes | make install-dep && \
+        make dpdk-install-dev && \
+        make bootstrap && \
+        make build && \
+        make pkg-deb; \
+    fi"
 
-RUN cd ${VPP_DIR} && git checkout ${VPP_COMMIT_ID} &&\
-    git clone https://github.com/Mellanox/vpp-binaries.git &&\
-    rm -rf build-root/ && mkdir build-root &&\
-    cp vpp-binaries/ubuntu1604/*.deb build-root/
 
 
 # copy source files to the container
