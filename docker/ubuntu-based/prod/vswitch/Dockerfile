@@ -19,12 +19,9 @@ ADD binaries/vpp.tar.gz .
 RUN rm vpp/vpp-api-python* && dpkg -i vpp/*.deb && \
     rm -rf vpp
 
-RUN git clone https://github.com/Mellanox/vpp-binaries.git &&\
-   cd vpp-binaries/ubuntu1604/ && dpkg -i *.deb  && cd .. && rm -rf ubuntu1604
-
-
 # add ldpreload lib
-#ENV LD_PRELOAD_LIB_DIR /opt/ldpreload/
+RUN mkdir /opt/ldpreload || true
+ENV LD_PRELOAD_LIB_DIR /opt/ldpreload/
 #ADD binaries/ldpreload.tar.gz $LD_PRELOAD_LIB_DIR
 
 # rename defualt VPP startup config to contiv-vswitch.conf
