@@ -15,6 +15,7 @@
 package ksr
 
 import (
+	"reflect"
 	"sync"
 
 	coreV1 "k8s.io/api/core/v1"
@@ -38,7 +39,7 @@ type SfcPodReflector struct {
 // is called.
 func (spr *SfcPodReflector) Init(stopCh2 <-chan struct{}, wg *sync.WaitGroup) error {
 
-	podReflectorFuncs := ReflectorFunctions{
+	sfcPodReflectorFuncs := ReflectorFunctions{
 		EventHdlrFunc: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				spr.addPod(obj)
@@ -53,9 +54,18 @@ func (spr *SfcPodReflector) Init(stopCh2 <-chan struct{}, wg *sync.WaitGroup) er
 		ProtoAllocFunc: func() proto.Message {
 			return &sfc.Sfc{}
 		},
+		K8s2NodeFunc: func(k8sObj interface{}) (interface{}, string, bool) {
+			k8sPod, ok := k8sObj.(*coreV1.Pod)
+			if !ok {
+				spr.Log.Errorf("sfc pod syncDataStore: wrong object type %s, obj %+v",
+					reflect.TypeOf(k8sObj), k8sObj)
+				return nil, "", false
+			}
+			return valueToProto(k8sPod.Name, k8sPod.Spec.NodeName), sfc.Key(k8sPod.Name), true
+		},
 	}
 
-	return spr.ksrInit(stopCh2, wg, pod.KeyPrefix(), "pods", &coreV1.Pod{}, podReflectorFuncs)
+	return spr.ksrInit(stopCh2, wg, pod.KeyPrefix(), "pods", &coreV1.Pod{}, sfcPodReflectorFuncs)
 }
 
 // addPod adds state data of a newly created K8s pod into the data store.
@@ -121,7 +131,7 @@ func (spr *SfcPodReflector) updatePod(oldObj, newObj interface{}) {
 			}
 		}
 	}
-	if oldLabels != nil {
+	if newLabels != nil {
 		for key, val := range newLabels {
 			if key == "sfc" && val == "true" {
 				newSfcLabelExist = true
@@ -130,7 +140,7 @@ func (spr *SfcPodReflector) updatePod(oldObj, newObj interface{}) {
 	}
 
 	if oldSfcLabelExist && newSfcLabelExist {
-		sfcKey := sfc.Key(oldK8sPod.GetName())
+		sfcKey := sfc.Key(newK8sPod.GetName())
 		oldSfcValue := valueToProto(oldK8sPod.GetName(), oldK8sPod.Spec.NodeName)
 		newSfcValue := valueToProto(newK8sPod.GetName(), newK8sPod.Spec.NodeName)
 		spr.ksrUpdate(sfcKey, oldSfcValue, newSfcValue)

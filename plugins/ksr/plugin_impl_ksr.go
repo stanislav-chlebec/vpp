@@ -59,6 +59,7 @@ type Plugin struct {
 	serviceReflector   *ServiceReflector
 	endpointsReflector *EndpointsReflector
 	nodeReflector      *NodeReflector
+	sfcPodReflector    *SfcPodReflector
 
 	reflectorRegistry *ReflectorRegistry
 
@@ -99,6 +100,7 @@ const (
 	endpointsObjType = "Endpoints"
 	serviceObjType   = "Service"
 	nodeObjType      = "Node"
+	sfcPodObjType    = "SfcPod"
 )
 
 // Init builds K8s client-set based on the supplied kubeconfig and initializes
@@ -151,6 +153,16 @@ func (plugin *Plugin) Init() error {
 	err = plugin.podReflector.Init(plugin.stopCh, &plugin.wg)
 	if err != nil {
 		plugin.Log.WithField("rwErr", err).Error("Failed to initialize Pod reflector")
+		return err
+	}
+
+	plugin.sfcPodReflector = &SfcPodReflector{
+		Reflector: plugin.newReflector("-sfcPod", sfcPodObjType, broker),
+	}
+	//plugin.sfcPodReflector.Log.SetLevel(logging.DebugLevel)
+	err = plugin.sfcPodReflector.Init(plugin.stopCh, &plugin.wg)
+	if err != nil {
+		plugin.Log.WithField("rwErr", err).Error("Failed to initialize Sfc Pod reflector")
 		return err
 	}
 
