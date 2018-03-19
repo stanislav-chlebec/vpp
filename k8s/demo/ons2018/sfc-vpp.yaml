@@ -166,10 +166,10 @@ data:
         end_range: 40
 
     nodes:
-      - name: k8s-master
+      - name: ts1-host4
         node_type: host
 
-      - name: k8s-worker1
+      - name: ts1-host3
         node_type: host
 
     vnf_services:
@@ -330,6 +330,8 @@ spec:
               mountPath: /etc/agent
             - name: govpp-plugin-cfg
               mountPath: /etc/govpp
+            - name: memif-sockets
+              mountPath: /tmp
 
         # This container installs the Contiv CNI binaries
         # and CNI network config file on each node.
@@ -385,6 +387,9 @@ spec:
         - name: govpp-plugin-cfg
           configMap:
             name: govpp-cfg
+        - name: memif-sockets
+          hostPath:
+            path: /tmp
 
 ---
 
