@@ -161,16 +161,26 @@ data:
     ipam_pools: # allocate internode vxlan mesh enpoints from a pool
       - name: vxlan_loopback_pool
         scope: system
-        network: 192.168.20.0/24 # allocate ip's from 192.168.20.30 to 192.168.20.40
+        network: 192.168.40.0/24 # allocate ip's from 192.168.20.30 to 192.168.20.40
         start_range: 30
         end_range: 40
 
     nodes:
-      - name: ts1-host4
+      - name: k8s-master
         node_type: host
+        interfaces:
+          - name: GigabitEthernet0/8/0
+            if_type: ethernet
+            ip_addresses:
+              - "192.168.16.1/24"
 
-      - name: ts1-host3
+      - name: k8s-worker1
         node_type: host
+        interfaces:
+          - name: GigabitEthernet0/8/0
+            if_type: ethernet
+            ip_addresses:
+              - "192.168.16.2/24"
 
     vnf_services:
       - name: l2pp_service_chain1
@@ -425,7 +435,7 @@ spec:
 
       containers:
         - name: contiv-ksr
-          image: contivvpp/ksr:latest
+          image: ciscolabs/ksr:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: ETCDV3_CONFIG

@@ -1,50 +1,19 @@
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: vnf-agent-cfg
-data:
-  etcd.conf: |
-    insecure-transport: true
-    dial-timeout: 5000000000
-    endpoints:
-      - "172.21.174.35:32379"
-
----
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: vnf1-vpp-cfg
-data:
-  vpp.conf: |
-    unix {
-      nodaemon
-      cli-listen 0.0.0.0:5003
-    }
-    plugins {
-      plugin dpdk_plugin.so {
-        disable
-      }
-    }
-
----
-
-apiVersion: v1
 kind: Pod
 metadata:
-  name: vnf1
+  name: vnf3
   namespace: default
   labels:
     sfc: "true"
 spec:
   containers:
-    - name: "vnf1"
+    - name: "vnf3"
       image: ligato/vpp-agent
       imagePullPolicy: IfNotPresent
       securityContext:
         privileged: true
       ports:
-        - containerPort: 5003
+        - containerPort: 5002
       env:
         - name: MICROSERVICE_LABEL
           value: vnf1
@@ -58,7 +27,7 @@ spec:
   volumes:
   - name: vpp-config
     configMap:
-      name: vnf1-vpp-cfg
+      name: vnf-vpp-cfg
   - name: agent-config
     configMap:
       name: vnf-agent-cfg
@@ -66,6 +35,6 @@ spec:
     hostPath:
       path: /tmp
   nodeSelector:
-    role: no-affinity
+    role: affinity
 
 ---

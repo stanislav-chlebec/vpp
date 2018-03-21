@@ -1,22 +1,4 @@
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: vnf2-vpp-cfg
-data:
-  vpp.conf: |
-    unix {
-      nodaemon
-      cli-listen 0.0.0.0:5004
-    }
-    plugins {
-      plugin dpdk_plugin.so {
-        disable
-      }
-    }
-
----
-
-apiVersion: v1
 kind: Pod
 metadata:
   name: vnf2
@@ -31,7 +13,7 @@ spec:
       securityContext:
         privileged: true
       ports:
-        - containerPort: 5004
+        - containerPort: 5002
       env:
         - name: MICROSERVICE_LABEL
           value: vnf2
@@ -45,7 +27,7 @@ spec:
   volumes:
   - name: vpp-config
     configMap:
-      name: vnf2-vpp-cfg
+      name: vnf-vpp-cfg
   - name: agent-config
     configMap:
       name: vnf-agent-cfg
@@ -53,6 +35,6 @@ spec:
     hostPath:
       path: /tmp
   nodeSelector:
-    role: affinity
+    role: no-affinity
 
 ---
