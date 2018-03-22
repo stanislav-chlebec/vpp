@@ -212,6 +212,35 @@ data:
               - vnf: vnf2
                 interface: port1
 
+      - name: l2pp_service_chain2
+        vnfs:
+          - name: vnf3
+            vnf_type: vppcontainer
+            interfaces:
+              - name: port1
+                if_type: memif
+                ip_addresses:
+                  - "10.0.10.1/24"
+                memif_parms:
+                  inter_vnf_conn: vswitch
+          - name: vnf4
+            vnf_type: vppcontainer
+            interfaces:
+              - name: port1
+                if_type: memif
+                ip_addresses:
+                  - "10.0.10.2/24"
+                memif_parms:
+                  inter_vnf_conn: vswitch
+        connections:
+          - conn_type: l2pp
+            vnf_service_mesh: inter_node_vxlan_mesh
+            interfaces:
+              - vnf: vnf3
+                interface: port1
+              - vnf: vnf4
+                interface: port1
+
     vnf_service_meshes:
       - name: inter_node_vxlan_mesh
         service_mesh_type: mesh
