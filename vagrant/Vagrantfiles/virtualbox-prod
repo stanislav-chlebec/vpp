@@ -156,7 +156,7 @@ set -x
 
 echo Args passed: [[ $@ ]]
 echo "Cloning Contiv-VPP repo..."
-cd /home/vagrant; git clone https://github.com/brecode/vpp.git
+cd /home/vagrant; git clone https://github.com/contiv/vpp.git
 cd /home/vagrant/vpp; git checkout ons-demo
 
 # --------------------------------------------------------
@@ -196,9 +196,6 @@ sudo -u vagrant -H bash << EOF
 echo "Installing Pod Network..."
 kubectl apply -f https://raw.githubusercontent.com/contiv/vpp/ons-demo/k8s/demo/ons2018/sfc-vpp.yaml
 
-echo "Schedule Pods on master"
-kubectl taint nodes --all node-role.kubernetes.io/master-
-kubectl label nodes k8s-master role=affinity
 EOF
 SCRIPT
 
