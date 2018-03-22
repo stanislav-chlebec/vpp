@@ -199,7 +199,6 @@ kubectl apply -f https://raw.githubusercontent.com/brecode/vpp/ons-demo/k8s/demo
 echo "Schedule Pods on master"
 kubectl taint nodes --all node-role.kubernetes.io/master-
 kubectl label nodes k8s-master role=affinity
-kubectl label nodes k8s-worker1 role=no-affinity
 EOF
 SCRIPT
 
@@ -267,6 +266,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         k8smaster.vm.provision "shell" do |s|
             s.inline = bootstrap_master
             s.args = ["k8s-master", k8smaster_ip]
+        end
+        k8smaster.vm.provision "shell" do |s|
+            s.inline = master2
         end
     end
 
