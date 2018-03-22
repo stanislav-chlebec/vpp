@@ -27,7 +27,7 @@ import (
 	"github.com/contiv/vpp/plugins/ksr/model/sfc"
 )
 
-// PodReflector subscribes to K8s cluster to watch for changes in the
+// SfcPodReflector subscribes to K8s cluster to watch for changes in the
 // configuration of k8s pods. Protobuf-modelled changes are published
 // into the selected key-value store.
 type SfcPodReflector struct {
