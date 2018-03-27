@@ -42,7 +42,8 @@ Verify that VNFs are running on different nodes with:
 kubectl get po -o wide
 ```
 
-To verify the configuration of the memif(s) is correct, enter the main vswitch from k8s-master (k8s-worker1 vswitch can be accessed by ssh'ing into the worker node and by using the same command):
+To verify that the configuration of the memif(s) are correct, enter the main vswitch from k8s-master.
+_k8s-worker1 vswitch can be accessed by ssh'ing into the worker node and by using the same command_:
 ```
 sudo vppctl
 sh int
