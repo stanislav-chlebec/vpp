@@ -3,6 +3,8 @@
 This Kubernetes network plugin uses FD.io VPP to provide network connectivity
 between PODs. Currently, only Kubernetes 1.9.X versions are supported. This deployment uses SFC controller to deploy and manage VNF(s).
 
+## Topology
+The vagrant setup deploys the following topology ![Vagrant Topology](docs/imgs/topo.png "Vagrant Topology"). Two VNF chains spanning 2 hosts, using memif interfaces and vxlan tunnel overlays. Tap interfaces are used for the management interface of the Pods. 
 
 ## Quickstart
 Get started with Contiv-VPP using the Vagrant environment:
