@@ -5,7 +5,6 @@ between PODs. Currently, only Kubernetes 1.9.X versions are supported. This depl
 
 ## Topology
 The vagrant setup deploys the following topology. Two VNF service chains spanning 2 hosts, using memif interfaces and vxlan tunnel overlays. Tap interfaces are used for the management interface of the Pods.
-
 ![Vagrant Topology](docs/imgs/topo.png "Vagrant Topology") 
  
 ## Quickstart
