@@ -22,7 +22,11 @@ vagrant ssh k8s-master
 cd /home/vagrant/vpp/k8s/demo/ons2018
 ```
 
-To run the example, you will need to apply labels to your cluster's nodes. To do so, run the setLabels script located in the ons2018 folder. 
+To run the example, you will need to apply labels to your cluster's nodes. To do so, run the 
+```
+setLabels
+```
+script located in the ons2018 folder. 
 
 ### Scenario 1
 Deploy two L2PP service chains in two nodes. The four VNFs should be deployed on master and worker nodes. 
