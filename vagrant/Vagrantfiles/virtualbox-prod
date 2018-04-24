@@ -178,9 +178,10 @@ source /home/vagrant/.profile
 # --------------> Kubeadm & Networking <------------------
 # --------------------------------------------------------
 
-sed -i '4 a Environment="KUBELET_EXTRA_ARGS=--node-ip=$KUBE_MASTER_IP"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -i '4 a Environment="KUBELET_EXTRA_ARGS=--node-ip='"$KUBE_MASTER_IP"' --feature-gates HugePages=false"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 systemctl daemon-reload
 systemctl restart kubelet
+
 curl --silent https://raw.githubusercontent.com/contiv/vpp/ons-demo/k8s/demo/ons2018/sfc-vpp.yaml > /tmp/contiv-vpp.yaml
 POD_SUBNET_CIDR=$(grep -A0 'PodSubnetCIDR:' /tmp/contiv-vpp.yaml | tail -n1 | awk '{ print $2}')
 echo "$(kubeadm init --token-ttl 0 --pod-network-cidr="${POD_SUBNET_CIDR}" --apiserver-advertise-address="${KUBE_MASTER_IP}" --token="${KUBEADM_TOKEN}")" >> /vagrant/config/cert
@@ -207,6 +208,11 @@ echo Args passed: [[ $@ ]]
 
 source /vagrant/config/init
 export KUBE_WORKER_IP=$2
+
+sed -i '4 a Environment="KUBELET_EXTRA_ARGS=--node-ip='"$KUBE_WORKER_IP"' --feature-gates HugePages=false"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+systemctl daemon-reload
+systemctl restart kubelet
+
 sed 's/127\.0\.0\.1.*k8s.*/'"$2"' '"$1"'/' -i /etc/hosts
 echo "export no_proxy='$1,$KUBE_MASTER_IP,$KUBE_WORKER_IP,localhost,127.0.0.1'" >> /etc/profile.d/envvar.sh
 echo "export no_proxy='$1,$KUBE_MASTER_IP,$KUBE_WORKER_IP,localhost,127.0.0.1'" >> /home/vagrant/.profile
