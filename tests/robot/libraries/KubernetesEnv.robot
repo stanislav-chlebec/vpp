@@ -36,25 +36,25 @@ ${NGINX_10_POD_FILE}    ${CURDIR}/../resources/nginx10.yaml
 
 Reinit_One_Node_Kube_Cluster
     [Documentation]    Assuming active SSH connection, store its index, execute multiple commands to reinstall and restart 1node cluster, wait to see it running.
-    ${normal_tag}    ${vpp_tag} =    Get_Docker_Tags
+#    ${normal_tag}    ${vpp_tag} =    Get_Docker_Tags
     BuiltIn.Set_Suite_Variable    ${testbed_connection}    ${VM_SSH_ALIAS_PREFIX}1
 #    ${conn} =     SSHLibrary.Get_Connection    ${VM_SSH_ALIAS_PREFIX}1
 #    Set_Suite_Variable    ${testbed_connection}    ${conn.index}
 #    SSHLibrary.Set_Client_Configuration    timeout=${SSH_TIMEOUT}    prompt=$
     SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf $HOME/.kube
-    KubeAdm.Reset    ${testbed_connection}
-    Docker_Pull_Contiv_Vpp    ${normal_tag}    ${vpp_tag}
-    Docker_Pull_Custom_Kube_Proxy
-    ${stdout} =    KubeAdm.Init    ${testbed_connection}
-    BuiltIn.Log    ${stdout}
-    BuiltIn.Should_Contain    ${stdout}    Your Kubernetes master has initialized successfully
-    SshCommons.Execute_Command_And_Log    mkdir -p $HOME/.kube
-    SshCommons.Execute_Command_And_Log    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-    SshCommons.Execute_Command_And_Log    sudo chown $(id -u):$(id -g) $HOME/.kube/config
-    KubeCtl.Taint    ${testbed_connection}    nodes --all node-role.kubernetes.io/master-
-    Apply_Contiv_Vpp_Plugin    ${testbed_connection}    ${normal_tag}    ${vpp_tag}
-    # Verify k8s and plugin are running
-    BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
+#    KubeAdm.Reset    ${testbed_connection}
+#    Docker_Pull_Contiv_Vpp    ${normal_tag}    ${vpp_tag}
+#    Docker_Pull_Custom_Kube_Proxy
+#    ${stdout} =    KubeAdm.Init    ${testbed_connection}
+#    BuiltIn.Log    ${stdout}
+#    BuiltIn.Should_Contain    ${stdout}    Your Kubernetes master has initialized successfully
+#    SshCommons.Execute_Command_And_Log    mkdir -p $HOME/.kube
+#    SshCommons.Execute_Command_And_Log    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+#    SshCommons.Execute_Command_And_Log    sudo chown $(id -u):$(id -g) $HOME/.kube/config
+#    KubeCtl.Taint    ${testbed_connection}    nodes --all node-role.kubernetes.io/master-
+#    Apply_Contiv_Vpp_Plugin    ${testbed_connection}    ${normal_tag}    ${vpp_tag}
+#    # Verify k8s and plugin are running
+#    BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
 
 Reinit_Multinode_Kube_Cluster
     [Documentation]    Assuming SSH connections with known aliases are created, check roles, reset nodes, init master, wait to see it running, join other nodes, wait until cluster is ready.
