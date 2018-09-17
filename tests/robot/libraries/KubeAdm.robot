@@ -8,7 +8,7 @@ Reset
     [Arguments]    ${ssh_session}
     [Documentation]    Execute "sudo kubeadm reset" on \${ssh_session}.
     BuiltIn.Log_Many    ${ssh_session}
-    BuiltIn.Run_Keyword_And_Return    SshCommons.Switch_And_Execute_Command    ${ssh_session}    ls;whoami
+#    BuiltIn.Run_Keyword_And_Return    SshCommons.Switch_And_Execute_Command    ${ssh_session}    ls;whoami
     BuiltIn.Run_Keyword_And_Return    SshCommons.Switch_And_Execute_Command    ${ssh_session}    sudo kubeadm reset -f
 
 Init
