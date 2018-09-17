@@ -134,7 +134,7 @@ Apply_Contiv_Vpp_Plugin
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/cni@image: contivvpp/cni:${normal_tag}@g' ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/ksr@image: contivvpp/ksr:${normal_tag}@g' ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/vswitch@image: contivvpp/vswitch:${vpp_tag}@g' ${file_path}
-#    KubeCtl.Apply_F    ${ssh_session}    ${file_path}
+    KubeCtl.Apply_F    ${ssh_session}    ${file_path}
 
 Verify_All_Pods_Running
     [Arguments]    ${ssh_session}    ${excluded_pod_prefix}=invalid-pod-prefix-
