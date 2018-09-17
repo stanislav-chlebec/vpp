@@ -42,7 +42,7 @@ Reinit_One_Node_Kube_Cluster
 #    Set_Suite_Variable    ${testbed_connection}    ${conn.index}
 #    SSHLibrary.Set_Client_Configuration    timeout=${SSH_TIMEOUT}    prompt=$
     SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf $HOME/.kube
-#    KubeAdm.Reset    ${testbed_connection}
+    KubeAdm.Reset    ${testbed_connection}
 #    Docker_Pull_Contiv_Vpp    ${normal_tag}    ${vpp_tag}
 #    Docker_Pull_Custom_Kube_Proxy
 #    ${stdout} =    KubeAdm.Init    ${testbed_connection}
