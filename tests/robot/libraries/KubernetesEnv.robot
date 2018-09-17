@@ -17,7 +17,7 @@ Documentation     This is a library to handle actions related to kubernetes clus
 Resource          ${CURDIR}/all_libs.robot
 
 *** Variables ***
-${NV_PLUGIN_PATH}    ${CURDIR}/../../../k8s/contiv-vpp.yaml
+${NV_PLUGIN_PATH}    ${CURDIR}/../../../k8s/contiv-vpp-arm64.yaml
 ${PULL_IMAGES_PATH}    ${CURDIR}/../../../k8s/pull-images.sh
 ${PROXY_INSTALL_PATH}    ${CURDIR}/../../../k8s/proxy-install.sh
 ${CLIENT_POD_FILE}    ${CURDIR}/../resources/ubuntu-client.yaml
@@ -51,7 +51,7 @@ Reinit_One_Node_Kube_Cluster
     SshCommons.Execute_Command_And_Log    mkdir -p $HOME/.kube
     SshCommons.Execute_Command_And_Log    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
     SshCommons.Execute_Command_And_Log    sudo chown $(id -u):$(id -g) $HOME/.kube/config
-#    KubeCtl.Taint    ${testbed_connection}    nodes --all node-role.kubernetes.io/master-
+    KubeCtl.Taint    ${testbed_connection}    nodes --all node-role.kubernetes.io/master-
 #    Apply_Contiv_Vpp_Plugin    ${testbed_connection}    ${normal_tag}    ${vpp_tag}
 #    # Verify k8s and plugin are running
 #    BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
@@ -127,11 +127,14 @@ Apply_Contiv_Vpp_Plugin
     SSHLibrary.Switch_Connection    ${ssh_session}
     ${file_path} =    BuiltIn.Set_Variable    ${RESULTS_FOLDER}/contiv-vpp.yaml
     # TODO: Add error checking for OperatingSystem calls.
+    OperatingSystem.Run    pwd; cd vpp/k8s/contiv-vpp/
+#helm template --name my-release ../contiv-vpp -f ./values-arm64.yaml,./values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always  > manifest-arm64.yaml3 
+
     OperatingSystem.Run    cp -f ${NV_PLUGIN_PATH} ${file_path}
-    OperatingSystem.Run    sed -i 's@image: contivvpp/cni@image: contivvpp/cni:${normal_tag}@g' ${file_path}
-    OperatingSystem.Run    sed -i 's@image: contivvpp/ksr@image: contivvpp/ksr:${normal_tag}@g' ${file_path}
-    OperatingSystem.Run    sed -i 's@image: contivvpp/vswitch@image: contivvpp/vswitch:${vpp_tag}@g' ${file_path}
-    KubeCtl.Apply_F    ${ssh_session}    ${file_path}
+#    OperatingSystem.Run    sed -i 's@image: contivvpp/cni@image: contivvpp/cni:${normal_tag}@g' ${file_path}
+#    OperatingSystem.Run    sed -i 's@image: contivvpp/ksr@image: contivvpp/ksr:${normal_tag}@g' ${file_path}
+#    OperatingSystem.Run    sed -i 's@image: contivvpp/vswitch@image: contivvpp/vswitch:${vpp_tag}@g' ${file_path}
+#    KubeCtl.Apply_F    ${ssh_session}    ${file_path}
 
 Verify_All_Pods_Running
     [Arguments]    ${ssh_session}    ${excluded_pod_prefix}=invalid-pod-prefix-
