@@ -45,7 +45,7 @@ Reinit_One_Node_Kube_Cluster
     KubeAdm.Reset    ${testbed_connection}
 #    Docker_Pull_Contiv_Vpp    ${normal_tag}    ${vpp_tag}
 #    Docker_Pull_Custom_Kube_Proxy
-#    ${stdout} =    KubeAdm.Init    ${testbed_connection}
+    ${stdout} =    KubeAdm.Init    ${testbed_connection}
 #    BuiltIn.Log    ${stdout}
 #    BuiltIn.Should_Contain    ${stdout}    Your Kubernetes master has initialized successfully
 #    SshCommons.Execute_Command_And_Log    mkdir -p $HOME/.kube
