@@ -46,11 +46,11 @@ Reinit_One_Node_Kube_Cluster
 #    Docker_Pull_Contiv_Vpp    ${normal_tag}    ${vpp_tag}
 #    Docker_Pull_Custom_Kube_Proxy
     ${stdout} =    KubeAdm.Init    ${testbed_connection}
-#    BuiltIn.Log    ${stdout}
-#    BuiltIn.Should_Contain    ${stdout}    Your Kubernetes master has initialized successfully
-#    SshCommons.Execute_Command_And_Log    mkdir -p $HOME/.kube
-#    SshCommons.Execute_Command_And_Log    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-#    SshCommons.Execute_Command_And_Log    sudo chown $(id -u):$(id -g) $HOME/.kube/config
+    BuiltIn.Log    ${stdout}
+    BuiltIn.Should_Contain    ${stdout}    Your Kubernetes master has initialized successfully
+    SshCommons.Execute_Command_And_Log    mkdir -p $HOME/.kube
+    SshCommons.Execute_Command_And_Log    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    SshCommons.Execute_Command_And_Log    sudo chown $(id -u):$(id -g) $HOME/.kube/config
 #    KubeCtl.Taint    ${testbed_connection}    nodes --all node-role.kubernetes.io/master-
 #    Apply_Contiv_Vpp_Plugin    ${testbed_connection}    ${normal_tag}    ${vpp_tag}
 #    # Verify k8s and plugin are running
