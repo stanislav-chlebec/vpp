@@ -25,7 +25,7 @@ OneNodeK8sSetup
     [Documentation]    Execute common setup, reinit 1node cluster, deploy client and server pods.
     setup-teardown.Testsuite_Setup
     KubernetesEnv.Reinit_One_Node_Kube_Cluster
-#    KubernetesEnv.Deploy_Client_And_Server_Pod_And_Verify_Running    ${testbed_connection}
+    KubernetesEnv.Deploy_Client_And_Server_Pod_And_Verify_Running    ${testbed_connection}
 
 OneNodeK8sTeardown
     [Documentation]    Log leftover output from pods, remove pods, execute common teardown.
