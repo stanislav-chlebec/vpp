@@ -125,7 +125,7 @@ Apply_Contiv_Vpp_Plugin
     [Documentation]    Apply contiv yaml after editing in specific docker tags.
     BuiltIn.Log_Many    ${ssh_session}    ${normal_tag}    ${vpp_tag}
     OperatingSystem.Run    pwd>a
-    OperatingSystem.Run    cd vpp/k8s/contiv-vpp/ ; helm --help
+    OperatingSystem.Run    cd k8s/contiv-vpp/
     OperatingSystem.Run    helm template --name my-release ../contiv-vpp -f ./values-arm64.yaml,./values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always>manifest-arm64.yaml3 
     #OperatingSystem.Run     helm template --name my-release ../../../k8s/contiv-vpp -f ../../../k8s/contiv-vpp/values-arm64.yaml,../../../k8s/contiv-vpp/values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always>../../../k8s/contiv-vpp-arm64.yamlx
     SSHLibrary.Switch_Connection    ${ssh_session}
