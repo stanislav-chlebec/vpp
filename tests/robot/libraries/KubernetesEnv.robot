@@ -129,13 +129,13 @@ Apply_Contiv_Vpp_Plugin
     # TODO: Add error checking for OperatingSystem calls.
     #OperatingSystem.Run    pwd; cd vpp/k8s/contiv-vpp/ ; helm --help
     #OperatingSystem.Run    helm template --name my-release ../contiv-vpp -f ./values-arm64.yaml,./values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always  > manifest-arm64.yaml3 
-    OperatingSystem.Run    helm template --name my-release ../../../k8s/contiv-vpp -f ../../../k8s/contiv-vpp/values-arm64.yaml,../../../k8s/contiv-vpp/values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always  > ../../../k8s/contiv-vpp-arm64.yaml
+    OperatingSystem.Run     helm template --name my-release ../../../k8s/contiv-vpp -f ../../../k8s/contiv-vpp/values-arm64.yaml,../../../k8s/contiv-vpp/values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always  > ../../../k8s/contiv-vpp-arm64.yaml
 
     OperatingSystem.Run    cp -f ${NV_PLUGIN_PATH} ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/cni@image: contivvpp/cni:${normal_tag}@g' ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/ksr@image: contivvpp/ksr:${normal_tag}@g' ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/vswitch@image: contivvpp/vswitch:${vpp_tag}@g' ${file_path}
-    KubeCtl.Apply_F    ${ssh_session}    ${file_path}
+#    KubeCtl.Apply_F    ${ssh_session}    ${file_path}
 
 Verify_All_Pods_Running
     [Arguments]    ${ssh_session}    ${excluded_pod_prefix}=invalid-pod-prefix-
