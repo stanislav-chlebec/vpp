@@ -10,7 +10,7 @@ spec:
         app: ubuntu-client
     spec:
       containers:
-      - image: rastislavszabo/ubuntu
+      - image: arm64v8/ubuntu:18.10
         imagePullPolicy: IfNotPresent
         name: ubuntu-client
         # Just spin & wait forever
