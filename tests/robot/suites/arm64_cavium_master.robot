@@ -14,8 +14,8 @@ Pod_To_Pod_Ping
 #    Get_Machine_Status   'VM_SSH_ALIAS_PREFIX1' 
 #
     [Setup]    Setup_Hosts_Connections
-    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    apt-get update&&apt-get upgrade&&apt-get install iputils-ping    ssh_session=${client_connection}
-    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    apt-get update&&apt-get upgrade&&apt-get install iputils-ping    ssh_session=${server_connection}
+    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    apt-get update&&apt-get -y upgrade&&apt-get -y install iputils-ping    ssh_session=${client_connection}
+    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    apt-get update&&apt-get -y upgrade&&apt-get -y install iputils-ping    ssh_session=${server_connection}
     ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    ping -c 5 ${server_ip}    ssh_session=${client_connection}
     BuiltIn.Should_Contain   ${stdout}    5 received, 0% packet loss
     ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    ping -c 5 ${client_ip}    ssh_session=${server_connection}
