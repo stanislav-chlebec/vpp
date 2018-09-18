@@ -8,7 +8,7 @@ Suite Teardown    OneNodeK8sTeardown
 Pod_To_Pod_Ping
     [Documentation]    Execute "ping -c 5" command between pods (both ways), require no packet loss.
     set suite variable ${index}		1
-    set suite variable  \${VM_SSH_ALIAS_PREFIX}${index}   HelloWorld
+    set suite variable  ${VM_SSH_ALIAS_PREFIX}${index}   HelloWorld
     SshCommons.Open_Ssh_Connection    'VM_SSH_ALIAS_PREFIX1'    ${KUBE_CLUSTER_1_VM_1_PUBLIC_IP}    ${KUBE_CLUSTER_1_VM_1_USER}    ${KUBE_CLUSTER_1_VM_1_PSWD}
     SSHLibrary.Set_Client_Configuration    prompt=${KUBE_CLUSTER_1_VM_1_PROMPT}
     Get_Machine_Status   'VM_SSH_ALIAS_PREFIX1' 
