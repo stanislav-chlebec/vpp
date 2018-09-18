@@ -175,7 +175,7 @@ Deploy_Client_And_Server_Pod_And_Verify_Running
     [Documentation]     Deploy and verify client and server ubuntu pods and store their names.
     BuiltIn.Log_Many    ${ssh_session}    ${client_file}    ${server_file}
     ${client_pod_name} =    Deploy_Pod_And_Verify_Running    ${ssh_session}    ${client_file}    ubuntu-client-    timeout=${POD_DEPLOY_CLIENT_TIMEOUT}
-#   ${server_pod_name} =    Deploy_Pod_And_Verify_Running    ${ssh_session}    ${server_file}    ubuntu-server-    timeout=${POD_DEPLOY_SERVER_TIMEOUT}
+    ${server_pod_name} =    Deploy_Pod_And_Verify_Running    ${ssh_session}    ${server_file}    ubuntu-server-    timeout=${POD_DEPLOY_SERVER_TIMEOUT}
     BuiltIn.Set_Suite_Variable    ${client_pod_name}
     BuiltIn.Set_Suite_Variable    ${server_pod_name}
 
