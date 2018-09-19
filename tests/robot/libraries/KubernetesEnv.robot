@@ -14,25 +14,25 @@ Documentation     This is a library to handle actions related to kubernetes clus
 ...               ${server_pod_name} server pod name assigned by k8s in 1-node 2-pod scenario.
 ...               ${nginx_pod_name} nginx pod name assigned by k8s in 1-node 2-pod scenario.
 ...               ${istio_pods} list of pods matching istio prefix last seen running.
-	Resource          ${CURDIR}/all_libs.robot
+Resource          ${CURDIR}/all_libs.robot
 
-	*** Variables ***
-	${NV_PLUGIN_PATH}    ${CURDIR}/../../../k8s/contiv-vpp-arm64.yaml
-	${PULL_IMAGES_PATH}    ${CURDIR}/../../../k8s/pull-images.sh
-	${PROXY_INSTALL_PATH}    ${CURDIR}/../../../k8s/proxy-install.sh
-	${CLIENT_POD_FILE}    ${CURDIR}/../resources/ubuntu-client.yaml
-	${SERVER_POD_FILE}    ${CURDIR}/../resources/ubuntu-server.yaml
-	${NGINX_POD_FILE}    ${CURDIR}/../resources/nginx.yaml
-	${CLIENT_POD_FILE_NODE1}    ${CURDIR}/../resources/ubuntu-client-node1.yaml
-	${SERVER_POD_FILE_NODE2}    ${CURDIR}/../resources/ubuntu-server-node2.yaml
-	${NGINX_POD_FILE_NODE2}    ${CURDIR}/../resources/nginx-node2.yaml
-	${CLIENT_ISTIO_POD_FILE}    ${CURDIR}/../resources/one-ubuntu-istio.yaml
-	${NGINX_ISTIO_POD_FILE}    ${CURDIR}/../resources/nginx-istio.yaml
-	${ISTIO_FILE}    ${CURDIR}/../resources/istio029.yaml
-	${NGINX_10_POD_FILE}    ${CURDIR}/../resources/nginx10.yaml
+*** Variables ***
+${NV_PLUGIN_PATH}    ${CURDIR}/../../../k8s/contiv-vpp-arm64.yaml
+${PULL_IMAGES_PATH}    ${CURDIR}/../../../k8s/pull-images.sh
+${PROXY_INSTALL_PATH}    ${CURDIR}/../../../k8s/proxy-install.sh
+${CLIENT_POD_FILE}    ${CURDIR}/../resources/ubuntu-client.yaml
+${SERVER_POD_FILE}    ${CURDIR}/../resources/ubuntu-server.yaml
+${NGINX_POD_FILE}    ${CURDIR}/../resources/nginx.yaml
+${CLIENT_POD_FILE_NODE1}    ${CURDIR}/../resources/ubuntu-client-node1.yaml
+${SERVER_POD_FILE_NODE2}    ${CURDIR}/../resources/ubuntu-server-node2.yaml
+${NGINX_POD_FILE_NODE2}    ${CURDIR}/../resources/nginx-node2.yaml
+${CLIENT_ISTIO_POD_FILE}    ${CURDIR}/../resources/one-ubuntu-istio.yaml
+${NGINX_ISTIO_POD_FILE}    ${CURDIR}/../resources/nginx-istio.yaml
+${ISTIO_FILE}    ${CURDIR}/../resources/istio029.yaml
+${NGINX_10_POD_FILE}    ${CURDIR}/../resources/nginx10.yaml
 
-	*** Keywords ***
-	# TODO: Passing ${ssh_session} around is annoying. Make keywords assume the correct SSH session is already active.
+*** Keywords ***
+# TODO: Passing ${ssh_session} around is annoying. Make keywords assume the correct SSH session is already active.
 
 Reinit_One_Node_Kube_Cluster
     [Documentation]    Assuming active SSH connection, store its index, execute multiple commands to reinstall and restart 1node cluster, wait to see it running.
