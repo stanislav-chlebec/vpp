@@ -2,7 +2,7 @@
 Documentation     Test suite to test basic ping, udp, tcp and dns functionality of the network plugin.
 Resource          ${CURDIR}/../libraries/all_libs.robot
 Suite Setup       OneNodeK8sSetup
-#Suite Teardown    OneNodeK8sTeardown
+Suite Teardown    OneNodeK8sTeardown
 
 *** Test Cases ***
 Pod_To_Pod_Ping
@@ -31,8 +31,8 @@ OneNodeK8sSetup
 
 OneNodeK8sTeardown
     [Documentation]    Log leftover output from pods, remove pods, execute common teardown.
-    KubernetesEnv.Log_Pods_For_Debug    ${testbed_connection}    exp_nr_vswitch=1
-    KubernetesEnv.Remove_Client_And_Server_Pod_And_Verify_Removed    ${testbed_connection}
+    #KubernetesEnv.Log_Pods_For_Debug    ${testbed_connection}    exp_nr_vswitch=1
+    #KubernetesEnv.Remove_Client_And_Server_Pod_And_Verify_Removed    ${testbed_connection}
     setup-teardown.Testsuite Teardown
 
 Setup_Hosts_Connections
