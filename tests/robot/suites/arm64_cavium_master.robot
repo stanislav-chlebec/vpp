@@ -2,7 +2,7 @@
 Documentation     Test suite to test basic ping, udp, tcp and dns functionality of the network plugin.
 Resource          ${CURDIR}/../libraries/all_libs.robot
 Suite Setup       OneNodeK8sSetup
-Suite Teardown    OneNodeK8sTeardown
+#Suite Teardown    OneNodeK8sTeardown
 
 *** Test Cases ***
 Pod_To_Pod_Ping
