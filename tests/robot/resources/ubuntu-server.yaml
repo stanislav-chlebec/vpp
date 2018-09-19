@@ -10,7 +10,7 @@ spec:
         app: ubuntu-server
     spec:
       containers:
-      - image: rastislavszabo/ubuntu
+      - image: arm64v8/ubuntu:18.10withping
         imagePullPolicy: IfNotPresent
         name: ubuntu-server
         # Just spin & wait forever
