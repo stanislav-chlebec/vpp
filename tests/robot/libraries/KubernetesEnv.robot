@@ -133,7 +133,7 @@ Apply_Contiv_Vpp_Plugin
     ${file_path} =    BuiltIn.Set_Variable    ${RESULTS_FOLDER}/contiv-vpp-arm64.yaml
     # TODO: Add error checking for OperatingSystem calls.
 
-    OperatingSystem.Run    cp -f """${NV_PLUGIN_PATH}""" ${file_path}
+    OperatingSystem.Run    cp -f ${NV_PLUGIN_PATH} ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/cni@image: contivvpp/cni:${normal_tag}@g' ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/ksr@image: contivvpp/ksr:${normal_tag}@g' ${file_path}
 #    OperatingSystem.Run    sed -i 's@image: contivvpp/vswitch@image: contivvpp/vswitch:${vpp_tag}@g' ${file_path}
