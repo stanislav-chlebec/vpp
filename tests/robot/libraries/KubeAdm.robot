@@ -8,11 +8,12 @@ Reset
     [Arguments]    ${ssh_session}
     [Documentation]    Execute "sudo kubeadm reset" on \${ssh_session}.
     BuiltIn.Log_Many    ${ssh_session}
-    BuiltIn.Run_Keyword_And_Return    SshCommons.Switch_And_Execute_Command    ${ssh_session}    sudo kubeadm reset
+    BuiltIn.Run_Keyword_And_Return    SshCommons.Switch_And_Execute_Command    ${ssh_session}    sudo kubeadm reset -f
 
 Init
 #    [Arguments]    ${ssh_session}    ${arguments}=--token-ttl 0 --pod-network-cidr=172.20.0.0/16 --skip-preflight-checks
-    [Arguments]    ${ssh_session}    ${arguments}=--token-ttl 0 --pod-network-cidr=172.20.0.0/16
+#    [Arguments]    ${ssh_session}    ${arguments}=--token-ttl 0 --pod-network-cidr=172.20.0.0/16
+    [Arguments]    ${ssh_session}    ${arguments}=--token-ttl 0 --pod-network-cidr=10.1.0.0/16
     [Documentation]    Execute "sudo -E kubeadm init" with configurabe arguments on \${ssh_session}.
     Builtin.Log_Many    ${ssh_session}    ${arguments}
     BuiltIn.Comment    TODO: Take cidr from a global variable for user to override when needed.
