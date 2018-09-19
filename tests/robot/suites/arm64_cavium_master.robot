@@ -32,7 +32,7 @@ OneNodeK8sSetup
 OneNodeK8sTeardown
     [Documentation]    Log leftover output from pods, remove pods, execute common teardown.
     #KubernetesEnv.Log_Pods_For_Debug    ${testbed_connection}    exp_nr_vswitch=1
-    #KubernetesEnv.Remove_Client_And_Server_Pod_And_Verify_Removed    ${testbed_connection}
+    KubernetesEnv.Remove_Client_And_Server_Pod_And_Verify_Removed    ${testbed_connection}
     setup-teardown.Testsuite Teardown
 
 Setup_Hosts_Connections
