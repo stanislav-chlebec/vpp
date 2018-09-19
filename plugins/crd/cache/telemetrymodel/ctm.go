@@ -153,6 +153,19 @@ type IPamEntry struct {
 	NodeIP         string `json:"nodeIP"`
 	PodNetwork     string `json:"podNetwork"`
 	VppHostNetwork string `json:"vppHostNetwork"`
+	Config         config `json:"config"`
+}
+
+type config struct {
+	PodIfIPCIDR             string `json:"podIfIPCIDR"`
+	PodSubnetCIRDR          string `json:"podSubnetCIRDR"`
+	PodNetworkPrefixLen     uint32 `json:"podNetworkPrefixLen"`
+	VppHostSubnetCIDR       string `json:"vppHostSubnetCIDR"`
+	VppHostNetworkPrefixLen uint32 `json:"vppHostNetworkPrefixLen"`
+	NodeInterconnectCIDR    string `json:"nodeInterconnectCIDR"`
+	NodeInterconnectDHCP    bool   `json:"nodeInterconnectDHCP"`
+	VxlanCIDR               string `json:"vxlanCIDR"`
+	ServiceCIDR             string `json:"serviceCIDR"`
 }
 
 // L2FibEntry defines the L2 FIB entry data set
@@ -197,6 +210,7 @@ type NodeIPRoute struct {
 
 // IPRoute defines the IP Route entry data set
 type IPRoute struct {
+	Type        uint32 `json:"type"`
 	VrfID       uint32 `json:"vrf_id"`
 	DstAddr     string `json:"dst_ip_addr"`
 	NextHopAddr string `json:"next_hop_addr"`

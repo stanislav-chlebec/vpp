@@ -14,65 +14,24 @@
 //
 //
 
-package nodes
+package cmdimpl
 
 import (
 	"encoding/json"
 	"fmt"
-	nodeinfomodel "github.com/contiv/vpp/plugins/contiv/model/node"
+	"github.com/contiv/vpp/plugins/contiv/model/node"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/ligato/cn-infra/db/keyval/etcd"
 	"github.com/ligato/cn-infra/logging/logrus"
 	"os"
-	"text/tabwriter"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 )
 
-//PrintNodes will print out all of the nodes in a network in a table format.
-func PrintNodes() {
-	cfg := &etcd.ClientConfig{
-		Config: &clientv3.Config{
-			Endpoints: []string{"127.0.0.1:32379"},
-		},
-		OpTimeout: 1 * time.Second,
-	}
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 4, '\t', 0)
-	// Create connection to etcd.
-	db, err := etcd.NewEtcdConnectionWithBytes(*cfg, logrus.DefaultLogger())
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	itr, err := db.ListValues("/vnf-agent/contiv-ksr/allocatedIDs/")
-	if err != nil {
-		fmt.Printf("Error getting values")
-		return
-	}
-	fmt.Fprintf(w, "id\tname\t\tip_address\t\tmanagement_ip_address\n")
-	w.Flush()
-	for {
-		kv, stop := itr.GetNext()
-		if stop {
-			break
-		}
-		buf := kv.GetValue()
-		//key := kv.GetKey()
-		//fmt.Printf("Key: %s, value: %s\n", key, string(buf))
-		nodeInfo := &nodeinfomodel.NodeInfo{}
-		err = json.Unmarshal(buf, nodeInfo)
-		//fmt.Printf("NodeInfo: %+v\n", nodeInfo)
-		// Do whatever processing we need to do
-		fmt.Fprintf(w, "%+v\t%+v\t%+v\t%+v\n",
-			nodeInfo.Id,
-			nodeInfo.Name,
-			nodeInfo.IpAddress,
-			nodeInfo.ManagementIpAddress)
-		w.Flush()
-	}
-	db.Close()
-}
-
-//FindIPForNodeName will find an ip address that corresponds to the passed in nodeName
+// FindIPForNodeName will find an ip address that corresponds to the passed
+// in nodeName
 func FindIPForNodeName(nodeName string) string {
 	cfg := &etcd.ClientConfig{
 		Config: &clientv3.Config{
@@ -99,7 +58,7 @@ func FindIPForNodeName(nodeName string) string {
 		buf := kv.GetValue()
 		//key := kv.GetKey()
 		//fmt.Printf("Key: %s, value: %s\n", key, string(buf))
-		nodeInfo := &nodeinfomodel.NodeInfo{}
+		nodeInfo := &node.NodeInfo{}
 		err = json.Unmarshal(buf, nodeInfo)
 		if nodeInfo.Name == nodeName {
 			return nodeInfo.ManagementIpAddress
@@ -107,4 +66,54 @@ func FindIPForNodeName(nodeName string) string {
 	}
 	db.Close()
 	return ""
+}
+
+//resolveNodeOrIP will take in an input string which is either a node name
+// or string and return the ip for the nodename or simply return the ip
+func resolveNodeOrIP(input string) (ipAdr string) {
+	re := regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
+	if re.MatchString(input) {
+		return input
+	}
+	ip := FindIPForNodeName(input)
+	return ip
+}
+
+// maskLength2Mask will tank in an int and return the bit mask for the
+// number given
+func maskLength2Mask(ml int) uint32 {
+	var mask uint32
+	for i := 0; i < 32-ml; i++ {
+		mask = mask << 1
+		mask++
+	}
+	return mask
+}
+
+func ip2uint32(ipAddress string) (uint32, error) {
+	var ipu uint32
+	parts := strings.Split(ipAddress, ".")
+	for _, p := range parts {
+		// num, _ := strconv.ParseUint(p, 10, 32)
+		num, _ := strconv.Atoi(p)
+		ipu = (ipu << 8) + uint32(num)
+		//fmt.Printf("%d: num: 0x%x, ipu: 0x%x\n", i, num, ipu)
+	}
+	return ipu, nil
+}
+
+func getIPAddressAndMask(ip string) (uint32, uint32, error) {
+	addressParts := strings.Split(ip, "/")
+	maskLen, err := strconv.Atoi(addressParts[1])
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid mask")
+	}
+
+	address, err := ip2uint32(addressParts[0])
+	if err != nil {
+		return 0, 0, err
+	}
+	mask := maskLength2Mask(maskLen)
+
+	return address, mask, nil
 }

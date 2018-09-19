@@ -20,12 +20,10 @@ import (
 	"github.com/contiv/vpp/plugins/crd/api"
 	"github.com/contiv/vpp/plugins/crd/cache/telemetrymodel"
 	"github.com/contiv/vpp/plugins/crd/datastore"
+	"github.com/contiv/vpp/plugins/crd/validator/utils"
+	nodemodel "github.com/contiv/vpp/plugins/ksr/model/node"
 	"github.com/ligato/cn-infra/logging"
 	"github.com/ligato/vpp-agent/plugins/vpp/model/interfaces"
-	"github.com/pkg/errors"
-
-	"strconv"
-	"strings"
 )
 
 // Validator is the implementation of the ContivTelemetryProcessor interface.
@@ -37,16 +35,16 @@ type Validator struct {
 	Report   api.Report
 }
 
+type tapMap map[string]map[uint32]telemetrymodel.NodeInterface
+
 // Validate performes the validation of L2 telemetry data collected from a
 // Contiv cluster.
 func (v *Validator) Validate() {
 	v.ValidateArpTables()
-	v.ValidateL2Connectivity()
+	v.ValidateBridgeDomains()
 	v.ValidateL2FibEntries()
 	v.ValidateK8sNodeInfo()
 	v.ValidatePodInfo()
-	v.ValidateTapToPod()
-	//v.ValidateStaticRoutes()
 }
 
 // ValidateArpTables validates the the entries of node ARP tables to
@@ -73,12 +71,14 @@ func (v *Validator) ValidateArpTables() {
 
 			arpIf, ok := node.NodeInterfaces[int(arpTableEntry.AeMeta.IfIndex)]
 			if !ok {
-				errString := fmt.Sprintf("ARP Table entry %+v: interface with ifIndex not found", arpTableEntry)
+				errString := fmt.Sprintf("invalid ARP entry <'%s'-'%s'>: bad ifIndex %d",
+					arpTableEntry.Ae.PhysAddress, arpTableEntry.Ae.IPAddress, arpTableEntry.AeMeta.IfIndex)
 				v.Report.AppendToNodeReport(node.Name, errString)
 				errCnt++
 				continue
 			}
 
+			// skip over ARP entries for all interfaces other than Vxlan BVI
 			if arpIf.If.IfType != interfaces.InterfaceType_SOFTWARE_LOOPBACK || arpIf.If.Name != "vxlanBVI" {
 				continue
 			}
@@ -86,15 +86,17 @@ func (v *Validator) ValidateArpTables() {
 			addressNotFound := false
 			macNode, err := v.VppCache.RetrieveNodeByLoopMacAddr(arpTableEntry.Ae.PhysAddress)
 			if err != nil {
-				errString := fmt.Sprintf("ARP Table entry %+v: no remote node for MAC Address", arpTableEntry)
+				errString := fmt.Sprintf("invalid ARP entry <'%s'-'%s'>: bad MAC Addess",
+					arpTableEntry.Ae.PhysAddress, arpTableEntry.Ae.IPAddress)
 				v.Report.AppendToNodeReport(node.Name, errString)
 				addressNotFound = true
 				errCnt++
 			}
-			ipNode, err := v.VppCache.RetrieveNodeByLoopIPAddr(arpTableEntry.Ae.IPAddress + "/24")
 
+			ipNode, err := v.VppCache.RetrieveNodeByLoopIPAddr(arpTableEntry.Ae.IPAddress + "/24")
 			if err != nil {
-				errString := fmt.Sprintf("ARP Table entry %+v: no remote node for IP Address", arpTableEntry)
+				errString := fmt.Sprintf("invalid ARP entry <'%s'-'%s'>: bad IP Addess",
+					arpTableEntry.Ae.PhysAddress, arpTableEntry.Ae.IPAddress)
 				v.Report.AppendToNodeReport(node.Name, errString)
 				addressNotFound = true
 				errCnt++
@@ -105,8 +107,8 @@ func (v *Validator) ValidateArpTables() {
 			}
 
 			if macNode.Name != ipNode.Name {
-				errString := fmt.Sprintf("ARP Table entry %+v: MAC -> node %s, IP -> nodes %s",
-					arpTableEntry, macNode.Name, ipNode.Name)
+				errString := fmt.Sprintf("invalid ARP entry <'%s'-'%s'>: MAC -> node %s, IP -> node %s",
+					arpTableEntry.Ae.PhysAddress, arpTableEntry.Ae.IPAddress, macNode.Name, ipNode.Name)
 				v.Report.AppendToNodeReport(node.Name, errString)
 				errCnt++
 			}
@@ -115,23 +117,20 @@ func (v *Validator) ValidateArpTables() {
 		}
 
 		for nodeName := range loopNodeMap {
-			v.Report.AppendToNodeReport(nodeName, fmt.Sprintf("ARP Table: No MAC entry  for node %s", node.Name))
 			errCnt++
+			errString := fmt.Sprintf("missing ARP entry for node %s", nodeName)
+			v.Report.AppendToNodeReport(node.Name, errString)
 		}
 	}
-	if errCnt == 0 {
-		v.Report.AppendToNodeReport(api.GlobalMsg, fmt.Sprintf("ARP Table Validation: OK"))
-	} else {
-		v.Report.AppendToNodeReport(api.GlobalMsg,
-			fmt.Sprintf("ARP Table Validation: %d error%s found", errCnt, printS(errCnt)))
-	}
+
+	v.addSummary(errCnt, "IP ARP")
 }
 
-//ValidateL2Connectivity makes sure that each node in the cache has the right
+//ValidateBridgeDomains makes sure that each node in the cache has the right
 // number of vxlan_tunnels for the number of nodes as well as checking that
 // each vxlan_tunnel points to a node that has a corresponding but opposite
 // tunnel itself.
-func (v *Validator) ValidateL2Connectivity() {
+func (v *Validator) ValidateBridgeDomains() {
 	errCnt := 0
 	nodeList := v.VppCache.RetrieveAllNodes()
 
@@ -191,6 +190,7 @@ validateNodeBD:
 			}
 
 			if bdIfc.BVI {
+				// check for duplicate BVIs (there must be only one BVI per BD)
 				if hasBviIfc {
 					errCnt++
 					errString := fmt.Sprintf("duplicate BVI, type %+v, BVI %s (ifIndex %d, ifName %s)",
@@ -334,12 +334,7 @@ validateNodeBD:
 		}
 	}
 
-	if errCnt == 0 {
-		v.Report.AppendToNodeReport(api.GlobalMsg, "L2 connectivity validation: OK")
-	} else {
-		v.Report.AppendToNodeReport(api.GlobalMsg,
-			fmt.Sprintf("L2 connectivity validation: %d errors found", errCnt))
-	}
+	v.addSummary(errCnt, "BD")
 }
 
 // ValidateL2FibEntries will validate that each nodes fib entries ip address
@@ -348,156 +343,167 @@ func (v *Validator) ValidateL2FibEntries() {
 	errCnt := 0
 	nodeList := v.VppCache.RetrieveAllNodes()
 
-	nodemap := make(map[string]bool)
 	for _, node := range nodeList {
-		nodemap[node.Name] = true
-	}
+		fibHasLoopIF := false
+		vxLanBD, err := getVxlanBD(node)
+		if err != nil {
+			errCnt++
+			errString := fmt.Sprintf("%s - skipping L2Fib validation for node %s", err.Error(), node.Name)
+			v.Report.AppendToNodeReport(node.Name, errString)
+			continue
+		}
 
-	for _, node := range nodeList {
+		// Used to mark all nodes for which there exists an L2Fib entry
 		nodeFibMap := make(map[string]bool)
 		for _, n := range nodeList {
 			nodeFibMap[n.Name] = true
 		}
 
-		if len(node.NodeL2Fibs) != len(nodeList) {
-			errCnt++
-			errString := fmt.Sprintf("incorrect number of L2 fib entries: have %d, expecting %d",
-				len(node.NodeL2Fibs), len(nodeList))
-			v.Report.AppendToNodeReport(node.Name, errString)
-			// continue
-		}
-
-		fibHasLoopIF := false
-		loopIf, err := datastore.GetNodeLoopIFInfo(node)
-		if err != nil {
-			errCnt++
-			errString := fmt.Sprintf("loop interface not found, skipping L2 FIB validation")
-			v.Report.AppendToNodeReport(node.Name, errString)
-			continue
-		}
-
-		fibEntryCount := 0
-		var vxLanBD int
-		for bdomainIdx, bdomain := range node.NodeBridgeDomains {
-			if bdomain.Bd.Name == "vxlanBD" {
-				vxLanBD = bdomainIdx
-				break
+		// Used to mark all L2Fib entries for which there exists a node
+		fibNodeMap := make(map[string]bool)
+		for feKey, feVal := range node.NodeL2Fibs {
+			if int(feVal.FeMeta.BridgeDomainID) != vxLanBD {
+				// Skip over entries in other BDs
+				continue
 			}
+			if !feVal.Fe.StaticConfig {
+				// Skip over dynamic (not statically programmed) entries
+				continue
+			}
+			fibNodeMap[feKey] = true
 		}
 
-		for _, fib := range node.NodeL2Fibs {
-			if int(fib.FeMeta.BridgeDomainID) != vxLanBD {
-				// skip over entries in other BDs
+		for feKey, feVal := range node.NodeL2Fibs {
+			if int(feVal.FeMeta.BridgeDomainID) != vxLanBD {
+				// Skip over entries in other BDs
 				continue
 			}
 
-			if fib.Fe.PhysAddress == loopIf.If.PhysAddress {
-				fibHasLoopIF = true
-				fibEntryCount++
-				if n, err := v.VppCache.RetrieveNodeByLoopMacAddr(fib.Fe.PhysAddress); err == nil {
-					delete(nodeFibMap, n.Name)
+			// Skip over dynamic (not statically programmed) entries
+			if !feVal.Fe.StaticConfig {
+				continue
+			}
+
+			if feVal.Fe.BridgedVirtualInterface {
+				// Validate local loop0 (BVI) L2FIB entry
+
+				// Lookup the local BVI (loopback) interface in the local node
+				if loopIf, err := datastore.GetNodeLoopIFInfo(node); err != nil {
+					errCnt++
+					errString := fmt.Sprintf("invalid L2Fib BVI entry '%s': loop interface not found on node %s",
+						feKey, node.Name)
+					v.Report.AppendToNodeReport(node.Name, errString)
+				} else {
+					// check if the L2Fib entry's MAC address is the same as
+					// in the BVI interface on the local node
+					if feVal.Fe.PhysAddress != loopIf.If.PhysAddress {
+						errCnt++
+						errString := fmt.Sprintf("L2Fib BVI entry '%s' invalid - bad MAC address; "+
+							"have '%s', expecting '%s'", feKey, feVal.Fe.PhysAddress, loopIf.If.PhysAddress)
+						v.Report.LogErrAndAppendToNodeReport(node.Name, errString)
+					}
+				}
+
+				// Do a consistency check of internal databases and report
+				// an error if out of whack
+				if _, err := v.VppCache.RetrieveNodeByLoopMacAddr(feVal.Fe.PhysAddress); err == nil {
+					fibHasLoopIF = true
 				} else {
 					errCnt++
-					errString := fmt.Sprintf("validator internal error: inconsistent MadAddress index, MAC %s",
-						fib.Fe.PhysAddress)
+					errString := fmt.Sprintf("L2Fib validator internal error: "+
+						"inconsistent MAC Address index, MAC %s", feVal.Fe.PhysAddress)
 					v.Report.LogErrAndAppendToNodeReport(node.Name, errString)
 				}
-				continue
-			}
 
-			intf, ok := node.NodeInterfaces[int(fib.FeMeta.OutgoingIfIndex)]
-			if !ok {
-				errCnt++
-				errString := fmt.Sprintf("interface for L2 fib entry '%s' not found; ifName %s, ifIndex %d",
-					fib.Fe.PhysAddress, fib.Fe.OutgoingIfName, fib.FeMeta.OutgoingIfIndex)
-				v.Report.AppendToNodeReport(node.Name, errString)
-				continue
-
-			}
-			macNode, err := v.VppCache.RetrieveNodeByGigEIPAddr(intf.If.Vxlan.DstAddress)
-			if err != nil {
-				errCnt++
-				errString := fmt.Sprintf("gigE IP address %s does not exist in gigEIPMap",
-					intf.If.Vxlan.DstAddress)
-				v.Report.AppendToNodeReport(node.Name, errString)
-				continue
-			}
-
-			remoteLoopIF, err := datastore.GetNodeLoopIFInfo(macNode)
-			if err != nil {
-				errCnt++
-				errString := fmt.Sprintf("invalid L2 fib entry '%s':missing loop interface on remote node %s",
-					fib.Fe.PhysAddress, macNode.Name)
-				v.Report.AppendToNodeReport(node.Name, errString)
-				continue
-			}
-
-			if remoteLoopIF.If.PhysAddress == fib.Fe.PhysAddress {
-				if n, err := v.VppCache.RetrieveNodeByLoopMacAddr(fib.Fe.PhysAddress); err == nil {
-					delete(nodeFibMap, n.Name)
-					fibEntryCount++
-				} else {
-					errCnt++
-					v.Report.AppendToNodeReport(node.Name,
-						fmt.Sprintf("validator internal error: inconsistent MAC Address index, MAC %s",
-							fib.Fe.PhysAddress))
-				}
-				continue
+				delete(fibNodeMap, feKey)
+				delete(nodeFibMap, node.Name)
 			} else {
-				errCnt++
-				errString := fmt.Sprintf("fib MAC %+v is different than actual MAC "+
-					"%+v", fib.Fe.PhysAddress, remoteLoopIF.If.PhysAddress)
-				v.Report.AppendToNodeReport(node.Name, errString)
-			}
+				// Validate remote node (VXLAN) L2FIB entry
 
-			if len(nodeFibMap) > 0 {
-				errCnt++
-				errString := fmt.Sprintf("missing Fib entries for node %s", node.Name)
-				v.Report.LogErrAndAppendToNodeReport(node.Name, errString)
-				for node := range nodeFibMap {
-					v.Report.AppendToNodeReport(node, node)
+				// Make sure the outgoing interface in the L2FIB entry exists
+				intf, ok := node.NodeInterfaces[int(feVal.FeMeta.OutgoingIfIndex)]
+				if !ok {
+					errCnt++
+					errString := fmt.Sprintf("outgoing interface for L2Fib entry '%s' not found ifName %s, "+
+						"ifIndex %d", feVal.Fe.PhysAddress, feVal.Fe.OutgoingIfName, feVal.FeMeta.OutgoingIfIndex)
+					v.Report.AppendToNodeReport(node.Name, errString)
+					continue
 				}
+
+				// Lookup the remote node by the destination address in the VXLAN interface
+				macNode, err := v.VppCache.RetrieveNodeByGigEIPAddr(intf.If.Vxlan.DstAddress)
+				if err != nil {
+					errCnt++
+					errString := fmt.Sprintf("invalid L2Fib entry '%s': "+
+						"remote node for VXLAN DstIP '%s' not found", feKey, intf.If.Vxlan.DstAddress)
+					v.Report.AppendToNodeReport(node.Name, errString)
+					continue
+				}
+
+				// Lookup the Vxlan BD's BVI (loopback) interface in the remote node
+				remoteLoopIF, err := datastore.GetNodeLoopIFInfo(macNode)
+				if err != nil {
+					delete(fibNodeMap, feKey)
+					delete(nodeFibMap, macNode.Name)
+					errCnt++
+					errString := fmt.Sprintf("invalid L2Fib entry '%s': missing loop interface on remote node %s",
+						feVal.Fe.PhysAddress, macNode.Name)
+					v.Report.AppendToNodeReport(node.Name, errString)
+					continue
+				}
+
+				// Make sure that the L2Fib entry's MAC address is the same as
+				// in the BVI interface on the remote node
+				if remoteLoopIF.If.PhysAddress != feVal.Fe.PhysAddress {
+					errCnt++
+					errString := fmt.Sprintf("invalid L2Fib entry '%s': have MAC Address '%s', expecting %s",
+						feKey, feVal.Fe.PhysAddress, remoteLoopIF.If.PhysAddress)
+					v.Report.AppendToNodeReport(node.Name, errString)
+				}
+
+				// Do a consistency check of internal databases and report
+				// an error if out of whack
+				if _, err := v.VppCache.RetrieveNodeByLoopMacAddr(feVal.Fe.PhysAddress); err != nil {
+					errCnt++
+					errString := fmt.Sprintf("L2Fib validator internal error: "+
+						"inconsistent MAC Address index, MAC %s", feVal.Fe.PhysAddress)
+					v.Report.AppendToNodeReport(node.Name, errString)
+				}
+
+				delete(fibNodeMap, feKey)
+				delete(nodeFibMap, macNode.Name)
 			}
 		}
 
 		if !fibHasLoopIF {
 			errCnt++
-			errString := fmt.Sprintf("fib for node %s loop interface missing",
-				node.Name)
-			v.Report.AppendToNodeReport(node.Name, errString)
-			continue
-		}
-
-		if fibEntryCount != len(nodeList) {
-			errCnt++
-			errString := fmt.Sprintf("unexpected number of valid L2 fib entries: have %d, expecting %d",
-				fibEntryCount, len(nodeList))
+			errString := fmt.Sprintf("L2Fib entry for the 'loop0' interface not found")
 			v.Report.AppendToNodeReport(node.Name, errString)
 		}
-		delete(nodemap, node.Name)
-	}
 
-	if len(nodemap) > 0 {
-		for node := range nodemap {
+		// Show all nodes for which there is no L2FIB entry
+		for remoteNodeName := range nodeFibMap {
 			errCnt++
-			errString := fmt.Sprintf("Error processing fib for node %s", node)
-			v.Report.AppendToNodeReport(node, errString)
+			errString := fmt.Sprintf("missing L2Fib entry for node %s", remoteNodeName)
+			v.Report.LogErrAndAppendToNodeReport(node.Name, errString)
 		}
 
+		// Show all L2Fib entrie for which there is no node
+		for fibEntry := range fibNodeMap {
+			errCnt++
+			errString := fmt.Sprintf("dangling L2Fib entry %s - no node for entry found", fibEntry)
+			v.Report.AppendToNodeReport(node.Name, errString)
+		}
 	}
 
-	if errCnt == 0 {
-		v.Report.AppendToNodeReport(api.GlobalMsg, "L2 Fib validation: OK")
-	} else {
-		v.Report.AppendToNodeReport(api.GlobalMsg,
-			fmt.Sprintf("L2 Fib validation: %d errors found", errCnt))
-	}
+	v.addSummary(errCnt, "L2Fib")
 }
 
-// ValidateK8sNodeInfo will make sure that the cache has the same number
-// of k8s nodes and etcd nodes and that each node in one database has a
-// counterpart node in the other database.
+// ValidateK8sNodeInfo will make sure that K8s's view of nodes in the cluster
+// is consistent with Contiv's view of nodes in the cluster. Each node in K8s
+// database must have a counterpart node in the Contiv database and vice versa.
 func (v *Validator) ValidateK8sNodeInfo() {
+	errCnt := 0
 	nodeList := v.VppCache.RetrieveAllNodes()
 
 	nodeMap := make(map[string]bool)
@@ -513,6 +519,7 @@ func (v *Validator) ValidateK8sNodeInfo() {
 	for _, node := range nodeList {
 		k8sNode, err := v.K8sCache.RetrieveK8sNode(node.Name)
 		if err != nil {
+			errCnt++
 			errString := fmt.Sprintf("node with name %s not present in the k8s node map", node.Name)
 			v.Report.AppendToNodeReport(node.Name, errString)
 			continue
@@ -525,194 +532,246 @@ func (v *Validator) ValidateK8sNodeInfo() {
 	}
 
 	if len(k8sNodeMap) > 0 {
+		errCnt++
 		for k8sNode := range k8sNodeMap {
 			v.Report.AppendToNodeReport(k8sNode, fmt.Sprintf("Contiv node missing for K8s node %s", k8sNode))
 		}
 	}
 
 	if len(nodeMap) > 0 {
+		errCnt++
 		for contivNode := range nodeMap {
 			v.Report.AppendToNodeReport(contivNode, fmt.Sprintf("K8s node missing for Contiv node %s", contivNode))
 		}
 	}
+
+	v.addSummary(errCnt, "K8sNode")
 }
 
-//ValidatePodInfo will check to see that each pod has a valid host ip address node and that the information correctly
-//correlates between the nodes and the pods.
+// ValidatePodInfo will check  that each pod has a valid host ip address node
+// and that the information correctly correlates between the nodes and the pods.
 func (v *Validator) ValidatePodInfo() {
+	// Prepare the mark-and-sweep database for detection of dangling pod-facing
+	// tap interfaces
+	tapMap := v.createTapMarkAndSweepDB()
 
+	// Prepare the mark-and-sweep database for detection of dangling pods
+	podMap := make(map[string]string)
+
+	errCnt := 0
 	podList := v.K8sCache.RetrieveAllPods()
-	podMap := make(map[string]bool)
+
 	for _, pod := range podList {
-		podMap[pod.Name] = true
-	}
-	for _, pod := range podList {
-		node, err := v.VppCache.RetrieveNodeByHostIPAddr(pod.HostIPAddress)
+		// Check if we have a vppNode with the Host IP address that K8s specifies
+		// for the Pod
+		vppNode, err := v.VppCache.RetrieveNodeByHostIPAddr(pod.HostIPAddress)
 		if err != nil {
-			v.Report.AppendToNodeReport(api.GlobalMsg, fmt.Sprintf("error finding node for Pod %s with host ip %s",
-				pod.Name, pod.HostIPAddress))
+			errCnt++
+			errString := fmt.Sprintf("vppNode not found for Pod %s with Host IP %s - skipping Pod validation",
+				pod.Name, pod.HostIPAddress)
+			v.Report.AppendToNodeReport(api.GlobalMsg, errString)
 			continue
 		}
 
-		podPtr, ok := node.PodMap[pod.Name]
+		// A pod must be present in its node's pod database
+		podPtr, ok := vppNode.PodMap[pod.Name]
 		if !ok {
-			v.Report.AppendToNodeReport(node.Name, fmt.Sprintf("pod %s in node %s podMap not found",
-				pod.Name, node.Name))
+			errCnt++
+			v.Report.AppendToNodeReport(vppNode.Name, fmt.Sprintf("pod %s's IP address (%s) points to node %s, "+
+				"but pod is not present in node's podMap", pod.Name, pod.HostIPAddress, vppNode.Name))
 			continue
 		}
 
 		if pod != podPtr {
-			errString := fmt.Sprintf("node podmap pod %+v is not the same as cache podmap pod %+v",
-				podPtr.Name, pod.Name)
-			v.Report.AppendToNodeReport(node.Name, errString)
-			continue
-		}
-
-		k8snode, err := v.K8sCache.RetrieveK8sNode(node.Name)
-		if err != nil {
-			errString := fmt.Sprintf("cannot find k8snode in k8sNodeMap for node with name %+v",
-				node.Name)
-			v.Report.LogErrAndAppendToNodeReport(node.Name, errString)
-			continue
-		}
-
-		i := 0
-		for _, adr := range k8snode.Addresses {
-			if adr.Type == 3 {
-				if adr.Address != pod.HostIPAddress {
-					errString := fmt.Sprintf("pod host ip %s does not match with k8snode ip %s",
-						pod.HostIPAddress, adr.Address)
-					v.Report.AppendToNodeReport(node.Name, errString)
-					continue
-				}
-				i++
-			}
-			if adr.Type == 1 {
-				if adr.Address != node.Name {
-					errString := fmt.Sprintf("pod host name %s does not match node name %s",
-						adr.Address, node.Name)
-					v.Report.AppendToNodeReport(node.Name, errString)
-					continue
-				}
-				i++
-			}
-		}
-		if i != 2 {
-			continue
-		}
-		delete(podMap, pod.Name)
-	}
-
-	if len(podMap) > 0 {
-		for p := range podMap {
-			v.Report.AppendToNodeReport(api.GlobalMsg, fmt.Sprintf("error processing pod %+v", p))
-		}
-
-	} else {
-		v.Report.AppendToNodeReport(api.GlobalMsg, "success validating pod info.")
-	}
-}
-
-//ValidateTapToPod will find the appropriate tap interface for each pod and cache that information in the pod.
-func (v *Validator) ValidateTapToPod() {
-	podList := v.K8sCache.RetrieveAllPods()
-
-	podMap := make(map[string]bool)
-	for _, pod := range podList {
-		podMap[pod.Name] = true
-	}
-
-	for _, pod := range podList {
-		// Skip host network pods - they do not have an associated tap
-		if pod.IPAddress == pod.HostIPAddress {
-			delete(podMap, pod.Name)
-			continue
-		}
-
-		vppNode, err := v.VppCache.RetrieveNodeByHostIPAddr(pod.HostIPAddress)
-		if err != nil {
-			v.Report.LogErrAndAppendToNodeReport(api.GlobalMsg,
-				fmt.Sprintf("validator internal error: inconsistent Host IP Address index, IP %s",
-					pod.HostIPAddress))
+			// There is a different pod under this pod's name in node's database...
+			errCnt++
+			errString := fmt.Sprintf("pod %s in node's podMap (%+v) is not the same as "+
+				"the pod in k8s cache (%+v)", podPtr.Name, podPtr, pod)
+			v.Report.AppendToNodeReport(vppNode.Name, errString)
 			continue
 		}
 
 		k8sNode, err := v.K8sCache.RetrieveK8sNode(vppNode.Name)
 		if err != nil {
-			v.Report.LogErrAndAppendToNodeReport(vppNode.Name,
-				fmt.Sprintf("validator internal error: inconsistent K8s node index, host name %s",
-					vppNode.Name))
+			// K8s does not know about the node where Contiv thinks that the
+			// pod is hosted
+			errCnt++
+			errString := fmt.Sprintf("vppNode '%s' hosting pod '%s' not in K8s database",
+				vppNode.Name, pod.Name)
+			v.Report.LogErrAndAppendToNodeReport(vppNode.Name, errString)
 			continue
 		}
 
-		str := strings.Split(k8sNode.Pod_CIDR, "/")
-		mask := str[1]
-		i, err := strconv.Atoi(mask)
-		if err != nil {
-			v.Report.AppendToNodeReport(k8sNode.Name, fmt.Sprintf("invalid Pod_CIDR %s", k8sNode.Pod_CIDR))
+		// Make sure that K8s view of the Pod's host IP address and host name
+		// are consistent with Contiv's view
+		for _, adr := range k8sNode.Addresses {
+			switch adr.Type {
+			case nodemodel.NodeAddress_NodeInternalIP:
+				if adr.Address != pod.HostIPAddress {
+					errCnt++
+					errString := fmt.Sprintf("pod %s: Host IP Addr '%s' does not match NodeInternalIP "+
+						"'%s' in K8s database", pod.Name, pod.HostIPAddress, adr.Address)
+					v.Report.AppendToNodeReport(vppNode.Name, errString)
+				}
+			case nodemodel.NodeAddress_NodeHostName:
+				if adr.Address != vppNode.Name {
+					errCnt++
+					errString := fmt.Sprintf("pod %s: Node name %s does not match NodeHostName %s"+
+						"in K8s database", pod.Name, vppNode.Name, adr.Address)
+					v.Report.AppendToNodeReport(vppNode.Name, errString)
+				}
+			default:
+				errCnt++
+				errString := fmt.Sprintf("pod %s: unknown address type %+v", pod.Name, adr)
+				v.Report.AppendToNodeReport(vppNode.Name, errString)
+			}
 		}
-		bitmask := maskLength2Mask(i)
+
+		// Skip over host-network pods
+		if pod.IPAddress == pod.HostIPAddress {
+			continue
+		}
+
+		// Get K8s's view of the Pod's CIDR on this node
+		_, k8sMask, err := utils.Ipv4CidrToAddressAndMask(k8sNode.Pod_CIDR)
+		if err != nil {
+			errCnt++
+			errString := fmt.Sprintf("invalid Pod_CIDR %s", k8sNode.Pod_CIDR)
+			v.Report.AppendToNodeReport(k8sNode.Name, errString)
+			continue
+		}
+
+		// Get Contiv's view of the VPP's pod-facing tap intefce subnet CIDR
+		// on this node (PodIfIpCIDR)
+		podIfIPAddr, podIfIPMask, err := utils.Ipv4CidrToAddressAndMask(vppNode.NodeIPam.Config.PodIfIPCIDR)
+		if err != nil {
+			errCnt++
+			errString := fmt.Sprintf("invalid IPAM PodIfIPCIDR %s", vppNode.NodeIPam.Config.PodIfIPCIDR)
+			v.Report.AppendToNodeReport(k8sNode.Name, errString)
+			continue
+		}
+		podIfIPPrefix := podIfIPAddr &^ podIfIPMask
+
+		// Make sure the VPP-side CIDR mask and K8s-side CIDR mask are the same
+		if k8sMask != podIfIPMask {
+			errCnt++
+			errString := fmt.Sprintf("pod CIDR mask mismatch: K8s Pod CIDR: %s, Contiv PodIfIpCIDR %s",
+				k8sNode.Pod_CIDR, vppNode.NodeIPam.Config.PodIfIPCIDR)
+			v.Report.AppendToNodeReport(k8sNode.Name, errString)
+			continue
+		}
+
+		// Populate Pod's VPP interface data (IP addresses, interface name and
+		// ifIndex)
+		podMap[pod.Name] = vppNode.Name
+		podAddr, err := utils.Ipv4ToUint32(pod.IPAddress)
+		if err != nil {
+			errCnt++
+			errString := fmt.Sprintf("invalid pod IP address %s", pod.IPAddress)
+			v.Report.AppendToNodeReport(k8sNode.Name, errString)
+			continue
+		}
+		podAddrSuffix := podAddr & podIfIPMask
+
+		// Find the VPP tap interface for the pod. The interface must be on
+		// the PodIfIPCIDR subnet and the bottom part of its address must be
+		// the same as the bottom part of the pod's IP address.
 		for _, intf := range vppNode.NodeInterfaces {
-			if strings.Contains(intf.IfMeta.VppInternalName, "tap") {
+			if intf.If.IfType == interfaces.InterfaceType_TAP_INTERFACE {
 				for _, ip := range intf.If.IPAddresses {
-					ipAddr := strings.Split(ip, "/")
-					podIP := ip2uint32(pod.IPAddress)
-					tapIP := ip2uint32(ipAddr[0])
-					if (podIP & bitmask) == (tapIP & bitmask) {
+					ifIPAddr, iffIPMask, err := utils.Ipv4CidrToAddressAndMask(ip)
+					if err != nil {
+						errCnt++
+						errString := fmt.Sprintf("bad IP address %s on pod-facing tap interface %s (%s)",
+							ip, intf.If.Name, intf.IfMeta.VppInternalName)
+						v.Report.AppendToNodeReport(k8sNode.Name, errString)
+						continue
+					}
+
+					if iffIPMask != 0 {
+						continue
+					}
+
+					ifIPAdrPrefix := ifIPAddr &^ podIfIPMask
+					ifIPAdrSuffix := ifIPAddr & podIfIPMask
+					if (podIfIPPrefix == ifIPAdrPrefix) && (ifIPAdrSuffix == podAddrSuffix) {
 						pod.VppIfIPAddr = ip
 						pod.VppIfInternalName = intf.IfMeta.VppInternalName
 						pod.VppIfName = intf.If.Name
 						pod.VppSwIfIdx = intf.IfMeta.SwIfIndex
+
+						// Mark both the pod and the tap interface as valid
 						delete(podMap, pod.Name)
+						delete(tapMap[vppNode.Name], intf.IfMeta.SwIfIndex)
 					}
 				}
 			}
 		}
 	}
-	if len(podMap) > 0 {
-		for pod := range podMap {
-			errString := errors.Errorf("Did not find valid tap for pod %+v", pod)
-			fmt.Println(errString)
+
+	for podName, nodeName := range podMap {
+		errCnt++
+		errString := fmt.Sprintf("no valid VPP tap interface found for pod %s", podName)
+		v.Report.AppendToNodeReport(nodeName, errString)
+	}
+
+	for _, node := range v.VppCache.RetrieveAllNodes() {
+		for ifIdx, intf := range tapMap[node.Name] {
+			errCnt++
+			errString := fmt.Sprintf("dangling pod-facing tap interface '%s' (vppName '%s', ifIndex %d)",
+				intf.If.Name, intf.IfMeta.VppInternalName, ifIdx)
+			v.Report.AppendToNodeReport(node.Name, errString)
 		}
 	}
+
+	v.addSummary(errCnt, "K8sPod")
 }
 
-//ValidateStaticRoutes validates that static routes were successfully gathered for each node.
-func (v *Validator) ValidateStaticRoutes() {
-	nodelist := v.VppCache.RetrieveAllNodes()
-	for _, node := range nodelist {
-		fmt.Println(node.NodeStaticRoutes)
+// createTapMarkAndSweepDB creates a database (db) used to detect dangling
+// pod-facing tap interfaces. It contains a per-node set of pod-facing tap
+// interfaces. Only interfaces with at least one address in the PodIfIpCIDR
+// subnet are placed in this DB. The validation algorithm will remove each
+// valid tap interface from this DB, only leaving those for which a valid
+// pod could not be found
+func (v *Validator) createTapMarkAndSweepDB() map[string]map[uint32]telemetrymodel.NodeInterface {
+	tapMap := make(map[string]map[uint32]telemetrymodel.NodeInterface, 0)
+
+	for _, node := range v.VppCache.RetrieveAllNodes() {
+		tapMap[node.Name] = make(map[uint32]telemetrymodel.NodeInterface, 0)
+
+		podIfIPAddress, podIfIPMask, err := utils.Ipv4CidrToAddressAndMask(node.NodeIPam.Config.PodIfIPCIDR)
+		if err != nil {
+			// Do not report error - we catch it later in the validation phase
+			continue
+		}
+		podIfIPPrefix := podIfIPAddress &^ podIfIPMask
+
+		for _, intf := range node.NodeInterfaces {
+			if intf.If.IfType == interfaces.InterfaceType_TAP_INTERFACE {
+				for _, ip := range intf.If.IPAddresses {
+					ifIPAddr, ifIPMask, err := utils.Ipv4CidrToAddressAndMask(ip)
+					if (err != nil) || (ifIPMask != 0) {
+						continue
+					}
+
+					if podIfIPPrefix == (ifIPAddr &^ podIfIPMask) {
+						tapMap[node.Name][intf.IfMeta.SwIfIndex] = intf
+					}
+				}
+			}
+		}
 	}
 
+	return tapMap
 }
 
-func maskLength2Mask(ml int) uint32 {
-	var mask uint32
-	for i := 0; i < 32-ml; i++ {
-		mask = mask << 1
-		mask++
+func (v *Validator) addSummary(errCnt int, kind string) {
+	if errCnt == 0 {
+		v.Report.AppendToNodeReport(api.GlobalMsg, fmt.Sprintf("%s validation: OK", kind))
+	} else {
+		v.Report.AppendToNodeReport(api.GlobalMsg,
+			fmt.Sprintf("%s validation: %d error%s found", kind, errCnt, printS(errCnt)))
 	}
-	return mask
-}
-
-func ip2uint32(ipAddress string) uint32 {
-	var ipu uint32
-	parts := strings.Split(ipAddress, ".")
-	for _, p := range parts {
-		// num, _ := strconv.ParseUint(p, 10, 32)
-		num, _ := strconv.Atoi(p)
-		ipu = (ipu << 8) + uint32(num)
-		//fmt.Printf("%d: num: 0x%x, ipu: 0x%x\n", i, num, ipu)
-	}
-	return ipu
-}
-
-func separateIPandMask(ipAddress string) (string, string) {
-	s := strings.Split(ipAddress, "/")
-	if len(s) == 2 {
-		return s[0], s[1]
-	}
-	return s[0], ""
 }
 
 func printS(errCnt int) string {
@@ -720,4 +779,13 @@ func printS(errCnt int) string {
 		return "s"
 	}
 	return ""
+}
+
+func getVxlanBD(node *telemetrymodel.Node) (int, error) {
+	for bdomainIdx, bdomain := range node.NodeBridgeDomains {
+		if bdomain.Bd.Name == "vxlanBD" {
+			return bdomainIdx, nil
+		}
+	}
+	return 0, fmt.Errorf("vxlanBD not found")
 }
