@@ -83,7 +83,7 @@ Reinit_Multinode_Kube_Cluster
     KubeCtl.Taint    ${testbed_connection}    nodes --all node-role.kubernetes.io/master-
     Apply_Contiv_Vpp_Plugin    ${testbed_connection}    ${normal_tag}    ${vpp_tag}
     # Verify k8s and plugin are running
-#    BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
+    #BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
     # join other nodes
     ${join_cmd} =    kube_parser.get_join_from_kubeadm_init    ${init_stdout}
 #    :FOR    ${index}    IN RANGE    2    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1

@@ -76,7 +76,7 @@ def get_join_from_kubeadm_init(stdout):
     lines = stdout.splitlines()
     join_cmd = []
     for line in lines:
-        if "kubeadm join --token" in line:
+        if "kubeadm join" in line:
             join_cmd.append(line)
     if len(join_cmd)  != 1:
         raise Exception("Not expected result: {}".format(join_cmd) )
