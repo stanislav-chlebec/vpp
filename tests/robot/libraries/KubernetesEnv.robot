@@ -59,7 +59,7 @@ Reinit_One_Node_Kube_Cluster
 Reinit_Multinode_Kube_Cluster
     [Documentation]    Assuming SSH connections with known aliases are created, check roles, reset nodes, init master, wait to see it running, join other nodes, wait until cluster is ready.
     BuiltIn.Set_Suite_Variable    ${testbed_connection}    ${VM_SSH_ALIAS_PREFIX}1
-    ${normal_tag}    ${vpp_tag} =    Get_Docker_Tags
+#    ${normal_tag}    ${vpp_tag} =    Get_Docker_Tags
     # check integrity of k8s cluster settings
     :FOR    ${index}    IN RANGE    1    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
     \    BuiltIn.Run_Keyword_If    """${index}""" == """${1}""" and """${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_ROLE}""" != """master"""   BuiltIn.Fail    Node ${index} should be kubernetes master.
@@ -72,7 +72,7 @@ Reinit_Multinode_Kube_Cluster
     \    KubeAdm.Reset    ${connection}
     \    SshCommons.Execute_Command_And_Log    sudo modprobe uio_pci_generic
     \    Docker_Pull_Contiv_Vpp    ${normal_tag}    ${vpp_tag}
-    \    Docker_Pull_Custom_Kube_Proxy
+#    \    Docker_Pull_Custom_Kube_Proxy
     # init master
     ${init_stdout} =    KubeAdm.Init    ${testbed_connection}
     BuiltIn.Log    ${init_stdout}
@@ -83,17 +83,17 @@ Reinit_Multinode_Kube_Cluster
     KubeCtl.Taint    ${testbed_connection}    nodes --all node-role.kubernetes.io/master-
     Apply_Contiv_Vpp_Plugin    ${testbed_connection}    ${normal_tag}    ${vpp_tag}
     # Verify k8s and plugin are running
-    BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
+#    BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
     # join other nodes
     ${join_cmd} =    kube_parser.get_join_from_kubeadm_init    ${init_stdout}
-    :FOR    ${index}    IN RANGE    2    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
-    \    ${connection} =    BuiltIn.Set_Variable    ${VM_SSH_ALIAS_PREFIX}${index}
-    \    SshCommons.Switch_And_Execute_Command    ${connection}    sudo ${join_cmd}    ignore_stderr=${True}
-    Wait_Until_Cluster_Ready    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}
-    # label the nodes
-    :FOR    ${index}    IN RANGE    1    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
-    \    KubeCtl.Label_Nodes    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_HOST_NAME}   location    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_LABEL}
-
+#    :FOR    ${index}    IN RANGE    2    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
+#    \    ${connection} =    BuiltIn.Set_Variable    ${VM_SSH_ALIAS_PREFIX}${index}
+#    \    SshCommons.Switch_And_Execute_Command    ${connection}    sudo ${join_cmd}    ignore_stderr=${True}
+#    Wait_Until_Cluster_Ready    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}
+#    # label the nodes
+#    :FOR    ${index}    IN RANGE    1    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
+#    \    KubeCtl.Label_Nodes    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_HOST_NAME}   location    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_LABEL}
+#
 Get_Docker_Tags
     [Documentation]    Depending on variables set, construct and return two docker tags to use.
     ${default} =    BuiltIn.Set_Variable_If    """${BRANCH}""" == "dev"    dev    latest

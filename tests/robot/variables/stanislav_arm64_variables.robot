@@ -17,7 +17,7 @@ ${KUBE_CLUSTER_1_VM_2_LOCAL_IP}    147.75.72.194
 ${KUBE_CLUSTER_1_VM_2_HOST_NAME}   contivvpp.pantheon.tech
 ${KUBE_CLUSTER_1_VM_2_USER}        robotusername
 ${KUBE_CLUSTER_1_VM_2_PSWD}        robotpassword
-${KUBE_CLUSTER_1_VM_2_ROLE}        master
+${KUBE_CLUSTER_1_VM_2_ROLE}        slave
 ${KUBE_CLUSTER_1_VM_2_LABEL}       client_node
 
 ${KUBE_CLUSTER_1_DOCKER_COMMAND}   docker
