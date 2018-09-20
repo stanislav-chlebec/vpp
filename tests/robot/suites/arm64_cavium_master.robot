@@ -35,8 +35,8 @@ OneNodeK8sTeardown
     KubernetesEnv.Remove_Client_And_Server_Pod_And_Verify_Removed    ${testbed_connection}
     SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf $HOME/.kube
     KubeAdm.Reset    ${testbed_connection}
-    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    rm -rf /var/etcd/contiv-data
-    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    rm -rf /var/bolt/bolt.db
+    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf /var/etcd/contiv-data
+    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf /var/bolt/bolt.db
     setup-teardown.Testsuite Teardown
 
 Setup_Hosts_Connections
