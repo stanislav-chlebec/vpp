@@ -17,7 +17,7 @@ Documentation     This is a library to handle actions related to kubernetes clus
 Resource          ${CURDIR}/all_libs.robot
 
 *** Variables ***
-${NV_PLUGIN_PATH}    ${CURDIR}/../../../k8s/contiv-vpp-arm64.yaml
+${NV_PLUGIN_PATH}    ${CURDIR}/../../../k8s/contiv-vpp${ARCHITECTURE}.yaml
 ${PULL_IMAGES_PATH}    ${CURDIR}/../../../k8s/pull-images.sh
 ${PROXY_INSTALL_PATH}    ${CURDIR}/../../../k8s/proxy-install.sh
 ${CLIENT_POD_FILE}    ${CURDIR}/../resources/ubuntu-client.yaml
@@ -127,10 +127,10 @@ Apply_Contiv_Vpp_Plugin
     OperatingSystem.Run    pwd>a
     OperatingSystem.Run    cd k8s/contiv-vpp/
     OperatingSystem.Run    pwd>>a
-    OperatingSystem.Run    cd k8s/contiv-vpp/;helm template --name my-release ../contiv-vpp -f ./values-arm64.yaml,./values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always>manifest-arm64.yaml3;cp manifest-arm64.yaml3 ../contiv-vpp-arm64.yaml
-    #OperatingSystem.Run     helm template --name my-release ../../../k8s/contiv-vpp -f ../../../k8s/contiv-vpp/values-arm64.yaml,../../../k8s/contiv-vpp/values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always>../../../k8s/contiv-vpp-arm64.yamlx
+    OperatingSystem.Run    cd k8s/contiv-vpp/;helm template --name my-release ../contiv-vpp -f ./values${ARCHITECTURE}.yaml,./values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always>manifest${ARCHITECTURE}.yaml3;cp manifest${ARCHITECTURE}.yaml3 ../contiv-vpp${ARCHITECTURE}.yaml
+    #OperatingSystem.Run     helm template --name my-release ../../../k8s/contiv-vpp -f ../../../k8s/contiv-vpp/values-${ARCHITECTURE}.yaml,../../../k8s/contiv-vpp/values.yaml --set vswitch.defineMemoryLimits=true --set vswitch.hugePages1giLimit=8Gi --set vswitch.memoryLimit=8Gi --set etcd.secureTransport=True --set ksr.image.pullPolicy=Always --set cni.image.pullPolicy=Always --set cni.image.pullPolicy=Always>../../../k8s/contiv-vpp-${ARCHITECTURE}.yamlx
     SSHLibrary.Switch_Connection    ${ssh_session}
-    ${file_path} =    BuiltIn.Set_Variable    ${RESULTS_FOLDER}/contiv-vpp-arm64.yaml
+    ${file_path} =    BuiltIn.Set_Variable    ${RESULTS_FOLDER}/contiv-vpp${ARCHITECTURE}.yaml
     # TODO: Add error checking for OperatingSystem calls.
 
     OperatingSystem.Run    cp -f ${NV_PLUGIN_PATH} ${file_path}
