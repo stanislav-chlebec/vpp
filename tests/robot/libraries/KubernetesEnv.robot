@@ -86,14 +86,14 @@ Reinit_Multinode_Kube_Cluster
     #BuiltIn.Wait_Until_Keyword_Succeeds    ${K8S_WITH_PLUGIN_START_TIMEOUT}    10s    Verify_K8s_With_Plugin_Running    ${testbed_connection}
     # join other nodes
     ${join_cmd} =    kube_parser.get_join_from_kubeadm_init    ${init_stdout}
-#    :FOR    ${index}    IN RANGE    2    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
-#    \    ${connection} =    BuiltIn.Set_Variable    ${VM_SSH_ALIAS_PREFIX}${index}
-#    \    SshCommons.Switch_And_Execute_Command    ${connection}    sudo ${join_cmd}    ignore_stderr=${True}
-#    Wait_Until_Cluster_Ready    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}
-#    # label the nodes
-#    :FOR    ${index}    IN RANGE    1    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
-#    \    KubeCtl.Label_Nodes    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_HOST_NAME}   location    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_LABEL}
-#
+    :FOR    ${index}    IN RANGE    2    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
+    \    ${connection} =    BuiltIn.Set_Variable    ${VM_SSH_ALIAS_PREFIX}${index}
+    \    SshCommons.Switch_And_Execute_Command    ${connection}    sudo ${join_cmd}    ignore_stderr=${True}
+    Wait_Until_Cluster_Ready    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}
+    # label the nodes
+    :FOR    ${index}    IN RANGE    1    ${KUBE_CLUSTER_${CLUSTER_ID}_NODES}+1
+    \    KubeCtl.Label_Nodes    ${testbed_connection}    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_HOST_NAME}   location    ${KUBE_CLUSTER_${CLUSTER_ID}_VM_${index}_LABEL}
+
 Get_Docker_Tags
     [Documentation]    Depending on variables set, construct and return two docker tags to use.
     ${default} =    BuiltIn.Set_Variable_If    """${BRANCH}""" == "dev"    dev    latest

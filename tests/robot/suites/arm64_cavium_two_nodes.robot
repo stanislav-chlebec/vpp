@@ -10,6 +10,7 @@ Pod_To_Ten_Nginxs
     [Setup]    Setup_Hosts_Connections
 #    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    curl http://${nginx_ip}    ssh_session=${client_connection}
 #    BuiltIn.Should_Contain   ${stdout}    If you see this page, the nginx web server is successfully installed
+    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    ls 
     [Teardown]    Teardown_Hosts_Connections
 
 #Host_To_Ten_Nginxs
