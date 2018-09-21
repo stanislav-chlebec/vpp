@@ -26,13 +26,13 @@ Pod_To_Ten_Nginxs
 TwoNodesK8sSetup
     Testsuite Setup
     KubernetesEnv.Reinit_Multi_Node_Kube_Cluster
-#    KubernetesEnv.Deploy_Client_Pod_And_Verify_Running    ${testbed_connection}    client_file=${CLIENT_POD_FILE}
-#    KubernetesEnv.Deploy_Multireplica_Pods_And_Verify_Running    ${testbed_connection}    ${NGINX_10_POD_FILE}    nginx-    10
-#    ${client_pod_details} =     KubeCtl.Describe_Pod    ${testbed_connection}    ${client_pod_name}
-#    ${client_ip} =     BuiltIn.Evaluate    &{client_pod_details}[${client_pod_name}]["IP"]
-#    BuiltIn.Set_Suite_Variable    ${client_ip}
-#    ${nginx_list} =    KubernetesEnv.Get_Pod_Name_List_By_Prefix    ${testbed_connection}    nginx-
-#    BuiltIn.Set_Suite_Variable    ${nginx_list}
+    KubernetesEnv.Deploy_Client_Pod_And_Verify_Running    ${testbed_connection}    client_file=${CLIENT_POD_FILE}
+    KubernetesEnv.Deploy_Multireplica_Pods_And_Verify_Running    ${testbed_connection}    ${NGINX_10_POD_FILE}    nginx-    10
+    ${client_pod_details} =     KubeCtl.Describe_Pod    ${testbed_connection}    ${client_pod_name}
+    ${client_ip} =     BuiltIn.Evaluate    &{client_pod_details}[${client_pod_name}]["IP"]
+    BuiltIn.Set_Suite_Variable    ${client_ip}
+    ${nginx_list} =    KubernetesEnv.Get_Pod_Name_List_By_Prefix    ${testbed_connection}    nginx-
+    BuiltIn.Set_Suite_Variable    ${nginx_list}
 
 TwoNodesK8sTeardown
 #    KubernetesEnv.Log_Pods_For_Debug    ${testbed_connection}
