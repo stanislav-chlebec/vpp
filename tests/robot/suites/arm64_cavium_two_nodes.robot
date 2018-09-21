@@ -42,6 +42,7 @@ TwoNodesK8sTeardown
 
 Setup_Hosts_Connections
     EnvConnections.Open_Client_Connection
+    EnvConnections.Find_Nginx_IP
 
 Teardown_Hosts_Connections
 #    KubernetesEnv.Leave_Container_Prompt_In_Pod    ${client_connection}
