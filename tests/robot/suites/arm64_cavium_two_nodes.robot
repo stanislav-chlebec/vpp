@@ -8,9 +8,16 @@ Suite Teardown    TwoNodesK8sTeardown
 Pod_To_Ten_Nginxs
     [Documentation]    Curl from one pod to another. Pods are on different nodes.
     [Setup]    Setup_Hosts_Connections
-    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    curl http://${nginx_ip}    ssh_session=${client_connection}
-    BuiltIn.Should_Contain   ${stdout}    If you see this page, the nginx web server is successfully installed
-    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    ls 
+    Log    ${nginx_list}
+    : FOR    ${nginx_node}     IN     @{nginx_list}
+    \    ${nginx_node_details} =    KubeCtl.Describe_Pod    ${testbed_connection}    ${nginx_node}
+    \    ${nginx_node_ip} =    BuiltIn.Evaluate    &{nginx_node_details}[${nginx_node}]["IP"]
+    \    ${stdout} =    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    curl http://${nginx_node_ip} --noproxy ${nginx_node_ip}   ignore_stderr=${True}
+    \    BuiltIn.Should_Contain   ${stdout}    If you see this page, the nginx web server is successfully installed
+#    EnvConnections.Find_Nginx_IP
+#    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    curl http://${nginx_ip}    ssh_session=${client_connection}
+#    BuiltIn.Should_Contain   ${stdout}    If you see this page, the nginx web server is successfully installed
+#    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    ls 
     [Teardown]    Teardown_Hosts_Connections
 
 #Host_To_Ten_Nginxs
@@ -42,7 +49,6 @@ TwoNodesK8sTeardown
 
 Setup_Hosts_Connections
     EnvConnections.Open_Client_Connection
-    EnvConnections.Find_Nginx_IP
 
 Teardown_Hosts_Connections
 #    KubernetesEnv.Leave_Container_Prompt_In_Pod    ${client_connection}
