@@ -74,7 +74,7 @@ ${TEST_DATA_FOLDER}                test_data
 
 # Timeouts and delays
 ${SSH_READ_DELAY}                  3
-${SSH_TIMEOUT}                     30
+${SSH_TIMEOUT}                     60
 ${SSH_LOG_OUTPUTS_TIMEOUT}         120
 ${POD_DEPLOY_SERVER_TIMEOUT}       600
 ${POD_DEPLOY_CLIENT_TIMEOUT}       600

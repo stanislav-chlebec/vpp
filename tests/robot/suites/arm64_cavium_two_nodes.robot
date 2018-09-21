@@ -5,15 +5,15 @@ Suite Setup       TwoNodesK8sSetup
 Suite Teardown    TwoNodesK8sTeardown
 
 *** Test Cases ***
-Pod_To_Ten_Nginxs
-    [Documentation]    Curl from one pod to another. Pods are on different nodes.
-    [Setup]    Setup_Hosts_Connections
-    Log    ${nginx_list}
-    : FOR    ${nginx_node}     IN     @{nginx_list}
-    \    ${nginx_node_details} =    KubeCtl.Describe_Pod    ${testbed_connection}    ${nginx_node}
-    \    ${nginx_node_ip} =    BuiltIn.Evaluate    &{nginx_node_details}[${nginx_node}]["IP"]
-    \    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    curl http://${nginx_node_ip}    ssh_session=${client_connection}
-    \    BuiltIn.Should_Contain   ${stdout}    If you see this page, the nginx web server is successfully installed
+#Pod_To_Ten_Nginxs
+#    [Documentation]    Curl from one pod to another. Pods are on different nodes.
+#    [Setup]    Setup_Hosts_Connections
+#    Log    ${nginx_list}
+#    : FOR    ${nginx_node}     IN     @{nginx_list}
+#    \    ${nginx_node_details} =    KubeCtl.Describe_Pod    ${testbed_connection}    ${nginx_node}
+#    \    ${nginx_node_ip} =    BuiltIn.Evaluate    &{nginx_node_details}[${nginx_node}]["IP"]
+#    \    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    curl http://${nginx_node_ip}    ssh_session=${client_connection}
+#    \    BuiltIn.Should_Contain   ${stdout}    If you see this page, the nginx web server is successfully installed
 #    [Teardown]    Teardown_Hosts_Connections
 
 Host_To_Ten_Nginxs
@@ -39,9 +39,15 @@ TwoNodesK8sSetup
 
 TwoNodesK8sTeardown
 #    KubernetesEnv.Log_Pods_For_Debug    ${testbed_connection}
-#    KubernetesEnv.Remove_Client_Pod_And_Verify_Removed    ${testbed_connection}    client_file=${CLIENT_POD_FILE_NODE1}
-#    KubernetesEnv.Remove_Multireplica_Pods_And_Verify_Removed    ${testbed_connection}    ${NGINX_10_POD_FILE}    nginx-
-    Testsuite Teardown
+    KubernetesEnv.Remove_Client_Pod_And_Verify_Removed    ${testbed_connection}    client_file=${CLIENT_POD_FILE_NODE1}
+    KubernetesEnv.Remove_Multireplica_Pods_And_Verify_Removed    ${testbed_connection}    ${NGINX_10_POD_FILE}    nginx-
+#    Testsuite Teardown
+
+    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf $HOME/.kube
+    KubeAdm.Reset    ${testbed_connection}
+    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf /var/etcd/contiv-data
+    SshCommons.Switch_And_Execute_Command    ${testbed_connection}    sudo rm -rf /var/bolt/bolt.db
+    setup-teardown.Testsuite Teardown
 
 Setup_Hosts_Connections
     EnvConnections.Open_Client_Connection
