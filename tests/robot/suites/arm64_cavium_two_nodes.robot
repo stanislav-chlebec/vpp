@@ -14,7 +14,7 @@ Pod_To_Ten_Nginxs
     \    ${nginx_node_ip} =    BuiltIn.Evaluate    &{nginx_node_details}[${nginx_node}]["IP"]
     \    ${stdout} =    KubernetesEnv.Run_Finite_Command_In_Pod    curl http://${nginx_node_ip}    ssh_session=${client_connection}
     \    BuiltIn.Should_Contain   ${stdout}    If you see this page, the nginx web server is successfully installed
-    [Teardown]    Teardown_Hosts_Connections
+#    [Teardown]    Teardown_Hosts_Connections
 
 Host_To_Ten_Nginxs
     [Documentation]    Curl from linux host pod to another on the same node.
@@ -38,7 +38,7 @@ TwoNodesK8sSetup
     BuiltIn.Set_Suite_Variable    ${nginx_list}
 
 TwoNodesK8sTeardown
-    KubernetesEnv.Log_Pods_For_Debug    ${testbed_connection}
+#    KubernetesEnv.Log_Pods_For_Debug    ${testbed_connection}
 #    KubernetesEnv.Remove_Client_Pod_And_Verify_Removed    ${testbed_connection}    client_file=${CLIENT_POD_FILE_NODE1}
 #    KubernetesEnv.Remove_Multireplica_Pods_And_Verify_Removed    ${testbed_connection}    ${NGINX_10_POD_FILE}    nginx-
     Testsuite Teardown
