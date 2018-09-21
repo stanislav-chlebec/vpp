@@ -47,6 +47,6 @@ Setup_Hosts_Connections
     EnvConnections.Open_Client_Connection
 
 Teardown_Hosts_Connections
-#    KubernetesEnv.Leave_Container_Prompt_In_Pod    ${client_connection}
-#    SSHLibrary.Switch_Connection    ${client_connection}
-#    SSHLibrary.Close_Connection
+    KubernetesEnv.Leave_Container_Prompt_In_Pod    ${client_connection}
+    SSHLibrary.Switch_Connection    ${client_connection}
+    SSHLibrary.Close_Connection
