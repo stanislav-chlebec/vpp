@@ -9,7 +9,7 @@ metadata:
 spec:
   containers:
     - name: "vnf1"
-      image: ligato/vpp-agent
+      image: ligato/vpp-agent-arm64:v2.0.0-beta-190-g19f3215d
       imagePullPolicy: IfNotPresent
       securityContext:
         privileged: true

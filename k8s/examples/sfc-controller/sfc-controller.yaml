@@ -30,7 +30,7 @@ spec:
 
       containers:
         - name: contiv-sfc-controller
-          image: ligato/prod_sfc_controller
+          image: ligato/sfc-controller-arm64:dev
           imagePullPolicy: IfNotPresent
           env:
             - name: HTTP_CONFIG
@@ -106,25 +106,25 @@ data:
 
     network_nodes:
       - metadata:
-          name: k8s-master
+          name: contivvpp 
         spec:
           node_type: host
           interfaces:
-            - name: GigabitEthernet0/8/0
+            - name: enP2p1s0f1
               bypass_renderer: true
               if_type: ethernet
               ip_addresses:
-                - "192.168.16.1/24"
+                - "147.75.72.194/30"
       - metadata:
-          name: k8s-worker1
+          name: vppagent
         spec:
           node_type: host
           interfaces:
-            - name: GigabitEthernet0/8/0
+            - name: enP2p1s0f1
               bypass_renderer: true
               if_type: ethernet
               ip_addresses:
-                - "192.168.16.2/24"
+                - "147.75.98.202/30"
 
     network_services:
       - metadata:

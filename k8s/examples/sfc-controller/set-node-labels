@@ -2,5 +2,17 @@
 
 echo "Schedule Pods on master"
 kubectl taint nodes --all node-role.kubernetes.io/master-
-kubectl label nodes k8s-master role=affinity --overwrite=true
-kubectl label nodes k8s-worker1 role=no-affinity --overwrite=true
+kubectl label nodes contivvpp role=affinity --overwrite=true
+kubectl label nodes vppagent role=no-affinity --overwrite=true
+
+#NAME        STATUS   ROLES    AGE     VERSION
+#contivvpp   Ready    master   7m50s   v1.13.4
+#vppagent    Ready    <none>   6m21s   v1.13.4
+
+#stanislav@contivvpp:~/work/contiv/vpp/k8s/examples/sfc-controller$ ./set-node-labels
+#Schedule Pods on master
+#node/contivvpp untainted
+#error: taint "node-role.kubernetes.io/master:" not found
+#node/contivvpp labeled
+#node/vppagent labeled
+
