@@ -110,21 +110,21 @@ data:
         spec:
           node_type: host
           interfaces:
-            - name: enP2p1s0f1
+            - name: VirtualFunctionEthernet1/0/2
               bypass_renderer: true
               if_type: ethernet
               ip_addresses:
-                - "147.75.72.194/30"
+                - "192.168.16.1/24"
       - metadata:
           name: vppagent
         spec:
           node_type: host
           interfaces:
-            - name: enP2p1s0f1
+            - name: VirtualFunctionEthernet1/0/2
               bypass_renderer: true
               if_type: ethernet
               ip_addresses:
-                - "147.75.98.202/30"
+                - "192.168.16.2/24"
 
     network_services:
       - metadata:
