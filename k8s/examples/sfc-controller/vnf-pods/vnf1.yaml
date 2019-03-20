@@ -18,6 +18,8 @@ spec:
       env:
         - name: MICROSERVICE_LABEL
           value: vnf1
+        - name: RETAIN_SUPERVISOR
+          value: "y"
       volumeMounts:
         - name: vpp-config
           mountPath: /etc/vpp
@@ -25,6 +27,10 @@ spec:
           mountPath: /opt/vpp-agent/dev
         - name: memif-sockets
           mountPath: /var/run/contiv
+      resources:
+        limits:
+          hugepages-1Gi: 2Gi
+          memory: 2Gi
   volumes:
     - name: vpp-config
       configMap:
