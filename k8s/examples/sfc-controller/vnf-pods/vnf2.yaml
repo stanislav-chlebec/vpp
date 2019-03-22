@@ -18,6 +18,10 @@ spec:
       env:
         - name: MICROSERVICE_LABEL
           value: vnf2
+#       - name: RETAIN_SUPERVISOR
+#         value: "y"
+        - name: ETCD_CONFIG
+          value: "/opt/vpp-agent/dev/etcd.conf"
       volumeMounts:
         - name: vpp-config
           mountPath: /etc/vpp
@@ -29,6 +33,8 @@ spec:
         limits:
           hugepages-1Gi: 2Gi
           memory: 2Gi
+        requests:
+          cpu: 250m
   volumes:
     - name: vpp-config
       configMap:
