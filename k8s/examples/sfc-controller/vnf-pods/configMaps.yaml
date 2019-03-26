@@ -11,6 +11,7 @@ data:
     cert-file: /var/contiv/etcd-secrets/client.pem
     key-file: /var/contiv/etcd-secrets/client-key.pem
     dial-timeout: 10000000000
+    allow-delayed-start: true
     endpoints:
       - "127.0.0.1:32379"
 
