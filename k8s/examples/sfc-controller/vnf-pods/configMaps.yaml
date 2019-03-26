@@ -6,10 +6,13 @@ metadata:
   name: vnf-agent-cfg
 data:
   etcd.conf: |
-    insecure-transport: true
-    dial-timeout: 5000000000
+    insecure-transport: false
+    ca-file: /var/contiv/etcd-secrets/ca.pem
+    cert-file: /var/contiv/etcd-secrets/client.pem
+    key-file: /var/contiv/etcd-secrets/client-key.pem
+    dial-timeout: 10000000000
     endpoints:
-      - "147.75.72.194:32379"
+      - "127.0.0.1:32379"
 
 ---
 

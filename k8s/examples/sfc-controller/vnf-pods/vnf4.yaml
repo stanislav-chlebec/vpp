@@ -29,6 +29,9 @@ spec:
           mountPath: /opt/vpp-agent/dev
         - name: memif-sockets
           mountPath: /var/run/contiv
+        - name: etcd-secrets
+          mountPath: /var/contiv/etcd-secrets
+          readOnly: true
       resources:
         limits:
           hugepages-1Gi: 2Gi
@@ -45,6 +48,9 @@ spec:
     - name: memif-sockets
       hostPath:
         path: /var/run/contiv
+    - name: etcd-secrets
+      hostPath:
+        path: /var/contiv/etcd-secrets
   nodeSelector:
     role: no-affinity
 
